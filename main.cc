@@ -49,6 +49,13 @@ using namespace std;
 
 const int prime_count = 512;
 
+const bool compute_binary           = true;
+const bool compute_naf_r2l          = true;
+const bool compute_dbns_chain_r2l   = true;
+const bool compute_dbns_chain_r2l36 = true;
+const bool compute_closest_23_tree  = true;
+
+
 /// Write a gnuplot data file
 void write_gnuplot_datfile(const char* filename,
 			   const uint64_t* x,
@@ -1159,12 +1166,19 @@ void time_primorial_growth(const group_cost_t& costs,
 			   factored_two_three_term16_t* reps[65536],
 			   const int rep_sizes[65536],
 			   const string& ext) {
+  cout << setprecision(5);
+
   // Remove dat files.
-  remove(dat_file("binary", ext).c_str());
-  remove(dat_file("naf_r2l", ext).c_str());
-  remove(dat_file("dbns_chain_r2l", ext).c_str());
-  remove(dat_file("dbns_chain_r2l36", ext).c_str());
-  remove(dat_file("closest_23_tree", ext).c_str());
+  if (compute_binary)
+    remove(dat_file("binary", ext).c_str());
+  if (compute_naf_r2l)
+    remove(dat_file("naf_r2l", ext).c_str());
+  if (compute_dbns_chain_r2l)
+    remove(dat_file("dbns_chain_r2l", ext).c_str());
+  if (compute_dbns_chain_r2l36)
+    remove(dat_file("dbns_chain_r2l36", ext).c_str());
+  if (compute_closest_23_tree)
+    remove(dat_file("closest_23_tree", ext).c_str());
 
   // Generate list of primes.
   uint32_t* primes = first_n_primes(prime_count);
@@ -1181,29 +1195,39 @@ void time_primorial_growth(const group_cost_t& costs,
     cout << "Primorial has " << primorial_size << " bits." << endl;
 
     // Binary.
-    c = cost_binary(costs, primorial);
-    cout << "Binary: " << c << endl;
-    append_gnuplot_datfile(dat_file("binary", ext), n, c);
+    if (compute_binary) {
+      c = cost_binary(costs, primorial);
+      cout << "Binary: " << c << endl;
+      append_gnuplot_datfile(dat_file("binary", ext), n, c);
+    }
 
     // NAF R2L.
-    c = cost_naf_r2l(costs, primorial);
-    cout << "NAF R2L: " << c << endl;
-    append_gnuplot_datfile(dat_file("naf_r2l", ext), n, c);
+    if (compute_naf_r2l) {
+      c = cost_naf_r2l(costs, primorial);
+      cout << "NAF R2L: " << c << endl;
+      append_gnuplot_datfile(dat_file("naf_r2l", ext), n, c);
+    }
 
     // DBNS Chain R2L
-    c = cost_dbns_chain_r2l(costs, primorial);
-    cout << "DBNS Chain R2L: " << c << endl;
-    append_gnuplot_datfile(dat_file("dbns_chain_r2l", ext), n, c);
+    if (compute_dbns_chain_r2l) {
+      c = cost_dbns_chain_r2l(costs, primorial);
+      cout << "DBNS Chain R2L: " << c << endl;
+      append_gnuplot_datfile(dat_file("dbns_chain_r2l", ext), n, c);
+    }
 
     // DBNS Chain R2L (mod 36)
-    c = cost_dbns_chain_r2l36(costs, primorial);
-    cout << "DBNS Chain R2L (mod 36): " << c << endl;
-    append_gnuplot_datfile(dat_file("dbns_chain_r2l36", ext), n, c);
+    if (compute_dbns_chain_r2l36) {
+      c = cost_dbns_chain_r2l36(costs, primorial);
+      cout << "DBNS Chain R2L (mod 36): " << c << endl;
+      append_gnuplot_datfile(dat_file("dbns_chain_r2l36", ext), n, c);
+    }
 
     // Closest 2,3 Tree
-    c = cost_closest_23_tree(costs, primorial);
-    cout << "Closest 2,3 Tree: " << c << endl;
-    append_gnuplot_datfile(dat_file("closest_23_tree", ext), n, c);
+    if (compute_closest_23_tree) {
+      c = cost_closest_23_tree(costs, primorial);
+      cout << "Closest 2,3 Tree: " << c << endl;
+      append_gnuplot_datfile(dat_file("closest_23_tree", ext), n, c);
+    }
 
     cout << endl;
   }
