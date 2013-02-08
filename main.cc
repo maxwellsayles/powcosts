@@ -47,8 +47,8 @@ extern "C" {
 
 using namespace std;
 
-const int prime_count = 8192;
-const int prime_step  = prime_count/128;
+const int prime_count = 10000;
+const int prime_step  = prime_count/100;
 
 const bool compute_binary           = true;
 const bool compute_naf_r2l          = true;
