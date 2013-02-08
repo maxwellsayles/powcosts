@@ -27,6 +27,7 @@
 #include "rep_c.h"
 
 #include "powcosts/cost_binary.h"
+#include "powcosts/cost_dbns_chain_r2l.h"
 #include "powcosts/cost_naf.h"
 
 extern "C" {
@@ -44,6 +45,8 @@ extern "C" {
 }
 
 using namespace std;
+
+const int prime_count = 1000;
 
 /// Write a gnuplot data file
 void write_gnuplot_datfile(const char* filename,
@@ -538,171 +541,6 @@ double cost_subreduce(const group_cost_t& costs, const mpz_t in_n) {
   }
 
   return best_cost;
-}
-
-/**
- * Exponentiates using a DB chain from right-to-left (mod 3)
- */
-double cost_pow_dbns_chain_r2l(const group_cost_t& costs, const mpz_t in_n) {
-  static mpz_c n;
-  double res = 0;
-  int i;
-
-  mpz_set(n.z, in_n);
-  while (mpz_cmp_ui(n.z, 0) > 0) {
-    // remove powers of two
-    i = mpz_scan1(n.z, 0);
-    mpz_tdiv_q_2exp(n.z, n.z, i);
-    res += costs.square * i;
-
-    // remove powers of three
-    while ((i = mpz_mod3(n.z)) == 0) {
-      mpn_divexact_by3(n.z->_mp_d, n.z->_mp_d, n.z->_mp_size);
-      res += costs.cube;
-    }
-
-    if (i == 1) {
-      // subtract 1 to make it divisible by 3
-      mpz_sub_ui(n.z, n.z, 1);
-      res += costs.compose;
-    } else {
-      // i == 2
-      // add 1 to make it divisible by 3
-      mpz_add_ui(n.z, n.z, 1);
-      res += costs.compose;
-    }
-  }
-  return res;
-}
-
-/**
- * Exponentiates using a DB chain from right-to-left (mod 3)
- */
-double cost_pow_dbns_chain_r2l_u32(const group_cost_t& costs, const uint32_t n) {
-  double res = 0;
-  int64_t ex = n;
-  int i;
-
-  while (ex > 0) {
-    // remove powers of two
-    i = lsb_s64(ex);
-    ex >>= i;
-    res += costs.square * i;
-
-    // remove powers of three
-    while ((i = (ex%3)) == 0) {
-      ex /= 3;
-      res += costs.cube;
-    }
-
-    if (i == 1) {
-      // subtract 1 to make it divisible by 3
-      ex --;
-      res += costs.compose;
-    } else {
-      // i == 2
-      // add 1 to make it divisible by 3
-      ex ++;
-      res += costs.compose;
-    }
-  }
-  return res;
-}
-
-double cost_pow_dbns_chain_r2l_list(const group_cost_t& costs, const uint32_t* list, const int list_size) {
-  double res = 0;
-  for (int i = 0;  i < list_size;  i ++) {
-    res += cost_pow_dbns_chain_r2l_u32(costs, list[i]);
-  }
-  return res;
-}
-
-/**
- * Exponentiates using a DB chain from right-to-left (mod 36)
- */
-double cost_pow_dbns_chain_r2l36(const group_cost_t& costs, const mpz_t in_n) {
-  static mpz_c n;
-  static mpz_c t;
-  double res = 0;
-  int i;
-  int m3;
-  int m36;
-
-  mpz_set(n.z, in_n);
-  while (mpz_cmp_ui(n.z, 0) > 0) {
-    // remove powers of two
-    i = mpz_scan1(n.z, 0);
-    mpz_tdiv_q_2exp(n.z, n.z, i);
-    res += costs.square * i;
-
-    // remove powers of three
-    while ((m3 = mpz_mod3(n.z)) == 0) {
-      mpn_divexact_by3(n.z->_mp_d, n.z->_mp_d, n.z->_mp_size);
-      res += costs.cube;
-    }
-
-    // mod 36
-    mpz_tdiv_q_2exp(t.z, n.z, 2);
-    m36 = (mpz_mod9(t.z)<<2) | (n.z->_mp_d[0] & 3);
-
-    if ((m3 == 1 && m36 != 7 && m36 != 31) ||
-	(m36 == 5 || m36 == 17)) {
-      // subtract 1
-      mpz_sub_ui(n.z, n.z, 1);
-      res += costs.compose;
-    } else {
-      // add 1
-      mpz_add_ui(n.z, n.z, 1);
-      res += costs.compose;
-    }
-  }
-  return res;
-}
-
-/**
- * Exponentiates using a DB chain from right-to-left (mod 36)
- */
-double cost_pow_dbns_chain_r2l36_u32(const group_cost_t& costs, const uint32_t n) {
-  double res = 0;
-  int i;
-  int m3;
-  int m36;
-  int64_t ex = n;
-
-  while (ex > 0) {
-    // remove powers of two
-    i = lsb_s64(ex);
-    ex >>= i;
-    res += costs.square * i;
-
-    // remove powers of three
-    while ((m3 = (ex%3)) == 0) {
-      ex /= 3;
-      res += costs.cube;
-    }
-
-    // mod 36
-    m36 = ex % 36;
-    if ((m3 == 1 && m36 != 7 && m36 != 31) ||
-	(m36 == 5 || m36 == 17)) {
-      // subtract 1
-      ex --;
-      res += costs.compose;
-    } else {
-      // add 1
-      ex ++;
-      res += costs.compose;
-    }
-  }
-  return res;
-}
-
-double cost_pow_dbns_chain_r2l36_list(const group_cost_t& costs, const uint32_t* list, const int list_size) {
-  double res = 0;
-  for (int i = 0;  i < list_size;  i ++) {
-    res += cost_pow_dbns_chain_r2l36_u32(costs, list[i]);
-  }
-  return res;
 }
 
 double cost_pow_dbns_pre_block(const group_cost_t& costs,
@@ -1323,14 +1161,16 @@ void time_primorial_growth(const group_cost_t& costs,
   // Remove dat files.
   remove(dat_file("binary", ext).c_str());
   remove(dat_file("naf_r2l", ext).c_str());
+  remove(dat_file("dbns_chain_r2l", ext).c_str());
+  remove(dat_file("dbns_chain_r2l36", ext).c_str());
 
   // Generate list of primes.
-  uint32_t* primes = first_n_primes(400);
+  uint32_t* primes = first_n_primes(prime_count);
   mpz_c primorial(1);
   double c;
 
   // Iterate over primorials.
-  for (int n = 1; n < 400; n++) {
+  for (int n = 1; n < prime_count; n++) {
     cout << "Using the first " << n << " odd primes." << endl;
 
     // Multiply in the next prime.
@@ -1338,15 +1178,25 @@ void time_primorial_growth(const group_cost_t& costs,
     int primorial_size = mpz_sizeinbase(primorial.z, 2);
     cout << "Primorial has " << primorial_size << " bits." << endl;
 
-    // Time binary.
+    // binary.
     c = cost_binary(costs, primorial);
     cout << "Binary: " << c << endl;
     append_gnuplot_datfile(dat_file("binary", ext), n, c);
 
-    // Time NAF R2L.
+    // NAF R2L.
     c = cost_naf_r2l(costs, primorial);
     cout << "NAF R2L: " << c << endl;
     append_gnuplot_datfile(dat_file("naf_r2l", ext), n, c);
+
+    // DBNS Chain R2L
+    c = cost_dbns_chain_r2l(costs, primorial);
+    cout << "DBNS Chain R2L: " << c << endl;
+    append_gnuplot_datfile(dat_file("dbns_chain_r2l", ext), n, c);
+
+    // DBNS Chain R2L (mod 36)
+    c = cost_dbns_chain_r2l36(costs, primorial);
+    cout << "DBNS Chain R2L (mod 36): " << c << endl;
+    append_gnuplot_datfile(dat_file("dbns_chain_r2l36", ext), n, c);
 
     cout << endl;
   }
