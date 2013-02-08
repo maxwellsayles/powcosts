@@ -62,7 +62,7 @@ void write_gnuplot_datfile(const char* filename,
 			   const double* y,
 			   const int sample_count) {
   ofstream f(filename);
-  f << setprecision(5);
+  f << setprecision(5) << fixed;
   for (int i = 0;  i < sample_count;  i ++) {
     f << x[i] << ", " << y[i] << endl;
   }
@@ -75,7 +75,7 @@ void append_gnuplot_datfile(const string& filename,
 			    const double y) {
   ofstream f;
   f.open(filename.c_str(), fstream::out | fstream::app);
-  f << setprecision(5);
+  f << setprecision(5) << fixed;
   f << x << ", " << y << endl;
   f.close();
 }
@@ -1166,7 +1166,7 @@ void time_primorial_growth(const group_cost_t& costs,
 			   factored_two_three_term16_t* reps[65536],
 			   const int rep_sizes[65536],
 			   const string& ext) {
-  cout << setprecision(5);
+  cout << setprecision(5) << fixed;
 
   // Remove dat files.
   if (compute_binary)
@@ -1187,7 +1187,7 @@ void time_primorial_growth(const group_cost_t& costs,
 
   // Iterate over primorials.
   for (int n = 1; n < prime_count; n++) {
-    cout << "Using the first " << n << " odd primes." << endl;
+    cout << "Using the first " << n << " odd primes on a " << ext << "-bit discriminant." << endl;
 
     // Multiply in the next prime.
     mpz_mul_ui(primorial.z, primorial.z, primes[n]);
