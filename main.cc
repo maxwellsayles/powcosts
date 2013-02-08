@@ -27,6 +27,7 @@
 #include "rep_c.h"
 
 #include "powcosts/cost_binary.h"
+#include "powcosts/cost_closest_23_tree.h"
 #include "powcosts/cost_dbns_chain_r2l.h"
 #include "powcosts/cost_naf.h"
 
@@ -46,7 +47,7 @@ extern "C" {
 
 using namespace std;
 
-const int prime_count = 1000;
+const int prime_count = 512;
 
 /// Write a gnuplot data file
 void write_gnuplot_datfile(const char* filename,
@@ -1163,6 +1164,7 @@ void time_primorial_growth(const group_cost_t& costs,
   remove(dat_file("naf_r2l", ext).c_str());
   remove(dat_file("dbns_chain_r2l", ext).c_str());
   remove(dat_file("dbns_chain_r2l36", ext).c_str());
+  remove(dat_file("closest_23_tree", ext).c_str());
 
   // Generate list of primes.
   uint32_t* primes = first_n_primes(prime_count);
@@ -1178,7 +1180,7 @@ void time_primorial_growth(const group_cost_t& costs,
     int primorial_size = mpz_sizeinbase(primorial.z, 2);
     cout << "Primorial has " << primorial_size << " bits." << endl;
 
-    // binary.
+    // Binary.
     c = cost_binary(costs, primorial);
     cout << "Binary: " << c << endl;
     append_gnuplot_datfile(dat_file("binary", ext), n, c);
@@ -1197,6 +1199,11 @@ void time_primorial_growth(const group_cost_t& costs,
     c = cost_dbns_chain_r2l36(costs, primorial);
     cout << "DBNS Chain R2L (mod 36): " << c << endl;
     append_gnuplot_datfile(dat_file("dbns_chain_r2l36", ext), n, c);
+
+    // Closest 2,3 Tree
+    c = cost_closest_23_tree(costs, primorial);
+    cout << "Closest 2,3 Tree: " << c << endl;
+    append_gnuplot_datfile(dat_file("closest_23_tree", ext), n, c);
 
     cout << endl;
   }
