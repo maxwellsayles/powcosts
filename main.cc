@@ -1189,15 +1189,15 @@ void time_primorial_growth(const group_cost_t& costs,
 
   // Iterate over primorials.
   while (prime_index < prime_count) {
-    cout << "Using the first " << prime_index <<
-            " odd primes on a " << ext << "-bit discriminant." << endl;
-
     // Multiply in the next prime.
     for (int i = prime_step;
 	 i > 0 && prime_index < prime_count;
 	 i--, prime_index++) {
       mpz_mul_ui(primorial.z, primorial.z, primes[prime_index]);
     }
+
+    cout << "Using the first " << prime_index <<
+            " odd primes on a " << ext << "-bit discriminant." << endl;
     int primorial_size = mpz_sizeinbase(primorial.z, 2);
     cout << "Primorial has " << primorial_size << " bits." << endl;
 
