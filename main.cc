@@ -50,12 +50,7 @@ using namespace std;
 const int prime_count = 10000;
 const int prime_step  = prime_count/100;
 
-const bool compute_binary           = true;
-const bool compute_naf_r2l          = true;
-const bool compute_dbns_chain_r2l   = true;
-const bool compute_dbns_chain_r2l36 = true;
-const bool compute_closest_23_tree  = false;
-
+typedef double cost_exp_f(const group_cost_t&, const mpz_c&);
 
 /// Write a gnuplot data file
 void write_gnuplot_datfile(const char* filename,
@@ -1166,26 +1161,19 @@ string dat_file(const string& type, const string& ext) {
 void time_primorial_growth(const group_cost_t& costs,
 			   factored_two_three_term16_t* reps[65536],
 			   const int rep_sizes[65536],
-			   const string& ext) {
+			   const string& type,
+			   const string& ext,
+			   cost_exp_f* fnc) {
   cout << setprecision(5) << fixed;
-
-  // Remove dat files.
-  if (compute_binary)
-    remove(dat_file("binary", ext).c_str());
-  if (compute_naf_r2l)
-    remove(dat_file("naf_r2l", ext).c_str());
-  if (compute_dbns_chain_r2l)
-    remove(dat_file("dbns_chain_r2l", ext).c_str());
-  if (compute_dbns_chain_r2l36)
-    remove(dat_file("dbns_chain_r2l36", ext).c_str());
-  if (compute_closest_23_tree)
-    remove(dat_file("closest_23_tree", ext).c_str());
 
   // Generate list of primes.
   uint32_t* primes = first_n_primes(prime_count);
+  primes[0] = 1;  // We only want odd primes.
   mpz_c primorial(1);
-  int prime_index = 1;
+  int prime_index = 0;
   double c;
+  const string out_file = dat_file(type, ext);
+  remove(out_file.c_str());
 
   // Iterate over primorials.
   while (prime_index < prime_count) {
@@ -1201,54 +1189,40 @@ void time_primorial_growth(const group_cost_t& costs,
     int primorial_size = mpz_sizeinbase(primorial.z, 2);
     cout << "Primorial has " << primorial_size << " bits." << endl;
 
-    // Binary.
-    if (compute_binary) {
-      c = cost_binary(costs, primorial);
-      cout << "Binary: " << c << endl;
-      append_gnuplot_datfile(dat_file("binary", ext), prime_index, c);
-    }
-
-    // NAF R2L.
-    if (compute_naf_r2l) {
-      c = cost_naf_r2l(costs, primorial);
-      cout << "NAF R2L: " << c << endl;
-      append_gnuplot_datfile(dat_file("naf_r2l", ext), prime_index, c);
-    }
-
-    // DBNS Chain R2L
-    if (compute_dbns_chain_r2l) {
-      c = cost_dbns_chain_r2l(costs, primorial);
-      cout << "DBNS Chain R2L: " << c << endl;
-      append_gnuplot_datfile(dat_file("dbns_chain_r2l", ext),
-			     prime_index, c);
-    }
-
-    // DBNS Chain R2L (mod 36)
-    if (compute_dbns_chain_r2l36) {
-      c = cost_dbns_chain_r2l36(costs, primorial);
-      cout << "DBNS Chain R2L (mod 36): " << c << endl;
-      append_gnuplot_datfile(dat_file("dbns_chain_r2l36", ext),
-			     prime_index, c);
-    }
-
-    // Closest 2,3 Tree
-    if (compute_closest_23_tree) {
-      c = cost_closest_23_tree(costs, primorial);
-      cout << "Closest 2,3 Tree: " << c << endl;
-      append_gnuplot_datfile(dat_file("closest_23_tree", ext),
-			     prime_index, c);
-    }
+    // Compute time of function.
+    c = fnc(costs, primorial);
+    cout << type << ": " << c << endl;
+    append_gnuplot_datfile(out_file, prime_index, c);
 
     cout << endl;
   }
   free(primes);
 }
 
+struct fnc_desc {
+  const string& type;
+  cost_exp_f* fnc;
+};
+
 int main(int argc, char** argv) {
-  time_primorial_growth(s64_qform_costs,
-			s64_pow_reps, s64_pow_rep_sizes, "64");
-  time_primorial_growth(s128_qform_costs,
-			s128_pow_reps, s128_pow_rep_sizes, "128");
+  const fnc_desc descs[] = {
+    {"binary", &cost_binary},
+    {"naf_r2l", &cost_naf_r2l},
+    {"dbns_chain_r2l", &cost_dbns_chain_r2l},
+    {"dbns_chain_r2l36", &cost_dbns_chain_r2l36},
+    //    {"closest_23_tree", &cost_closest_23_tree},
+  };
+  const int desc_count = sizeof(descs) / sizeof(fnc_desc);
+
+  for (int i = 0; i < desc_count; i++) {
+    const fnc_desc& desc = descs[i];
+    time_primorial_growth(s64_qform_costs,
+			  s64_pow_reps, s64_pow_rep_sizes,
+			  desc.type, "64", desc.fnc);
+    time_primorial_growth(s128_qform_costs,
+			  s128_pow_reps, s128_pow_rep_sizes,
+			  desc.type, "128", desc.fnc);
+  }
   return 0;
 }
 
