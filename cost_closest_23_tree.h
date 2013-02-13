@@ -6,7 +6,10 @@
 
 class CostClosest23Tree : public ICostExp {
  public:
+  CostClosest23Tree(const int k) : k_(k) {}
   double cost(const group_cost_t& cost, const mpz_c& in_n) const;
+ private:
+  const int k_;
 };
 
 #endif

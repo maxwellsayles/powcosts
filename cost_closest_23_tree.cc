@@ -8,7 +8,7 @@ double CostClosest23Tree::cost(const group_cost_t& cost,
 			       const mpz_c& in_n) const {
   int term_count;
   two_three_term_t* terms =
-      rep_prune_closest(&term_count, in_n.z, &cost, 16);
+      rep_prune_closest(&term_count, in_n.z, &cost, k_);
   int max_a = 0;
   int max_b = 0;
   for (int i = 0; i < term_count; i++) {

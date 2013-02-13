@@ -8,15 +8,13 @@
 #include <iomanip>
 #include <iostream>
 #include <iterator>
+#include <limits>
 #include <map>
 #include <set>
 #include <sstream>
 #include <vector>
 
-#include <float.h>
 #include <gmp.h>
-#define __STDC_LIMIT_MACROS
-#include <limits.h>
 #include <math.h>
 #include <stdint.h>
 #include <stdlib.h>
@@ -29,8 +27,10 @@
 #include "powcosts/cost_binary.h"
 #include "powcosts/cost_closest_23_tree.h"
 #include "powcosts/cost_dbns_chain_r2l.h"
+#include "powcosts/cost_dbns_l2r.h"
 #include "powcosts/cost_naf.h"
 #include "powcosts/i_cost_exp.h"
+#include "powcosts/util.h"
 
 extern "C" {
 #include "liboptarith/closest_23.h"
@@ -48,205 +48,8 @@ extern "C" {
 
 using namespace std;
 
-const int prime_count = 5000;
+const int prime_count = 2500;
 const int prime_step  = prime_count/100;
-
-/// Write a gnuplot data file
-void write_gnuplot_datfile(const char* filename,
-			   const uint64_t* x,
-			   const double* y,
-			   const int sample_count) {
-  ofstream f(filename);
-  f << setprecision(5) << fixed;
-  for (int i = 0;  i < sample_count;  i ++) {
-    f << x[i] << ", " << y[i] << endl;
-  }
-  f.close();
-}
-
-/// Append a row to a gnuplot data file.
-void append_gnuplot_datfile(const string& filename,
-			    const uint64_t x,
-			    const double y) {
-  ofstream f;
-  f.open(filename.c_str(), fstream::out | fstream::app);
-  f << setprecision(5) << fixed;
-  f << x << ", " << y << endl;
-  f.close();
-}
-
-/// \f$ v = 2^a * 3^b \f$
-inline void two_three_val(mpz_t v, const int a, const int b) {
-  mpz_ui_pow_ui(v, 3, b);
-  mpz_mul_2exp(v, v, a);
-}
-
-/**
- * True if x is of the form \f$ s2^a3^b \f$ where s in {1,-1}.
- * a and b are output paramters.
- */
-bool is_2_3_integer(const mpz_t x, int* a, int* b) {
-  mpz_c t;
-
-  // make sure x is not zero
-  if (mpz_cmp_ui(x, 0) == 0) {
-    (*a) = 0;
-    (*b) = 0;
-    return false;
-  }
-
-  // remove powers of 2
-  (*a) = mpz_scan1(x, 0);
-  if (*a > 0) {
-    mpz_tdiv_q_2exp(t.z, x, *a);
-  } else {
-    mpz_set(t.z, x);
-  }
-
-  // remove powers of 3
-  (*b) = 0;
-  while (mpz_mod3(t.z) == 0) {
-    mpz_divexact_ui(t.z, t.z, 3);
-    (*b) ++;
-  }
-
-  return (mpz_cmpabs_ui(t.z, 1) == 0);
-}
-
-/**
- * Computes a 2^a3^b such that the distance from n is minimal.
- * Returns the value of the best approximation (2^a3^b).
- */
-mpz_c best_db_approx(int* out_a,
-		     int* out_b,
-		     const mpz_t n,
-		     const int max_a,
-		     const int max_b) {
-  if (is_2_3_integer(n, out_a, out_b)) {
-    return n;
-  }
-
-  mpz_c approx;
-  mpz_c best_d;
-  mpz_c d;
-  mpz_c v;
-  mpz_c tmp_v;
-  int best_a = max_a;
-  int best_b = max_b;
-  int a;
-  int b;
-  int tmp;
-
-  mpz_set(best_d.z, n);
-
-  // find largest 'a' such that 2^a <= n
-  a = mpz_sizeinbase(n, 2) - 1;
-  if (a > max_a) a = max_a;
-  mpz_set_ui(v.z, 1);
-  mpz_mul_2exp(v.z, v.z, a);
-
-  // find largest 'b' such that 2^a3^b <= n
-  b = 0;
-  mpz_set(tmp_v.z, v.z);
-  while (mpz_cmp(tmp_v.z, n) <= 0) {
-    mpz_set(v.z, tmp_v.z);
-
-    // tmp_v = v*3
-    mpz_mul_2exp(tmp_v.z, v.z, 1);
-    mpz_add(tmp_v.z, tmp_v.z, v.z);
-        
-    b ++;
-  }
-  b --;
-
-  // iterate all values of 'a'
-  while (a >= 0 && b <= max_b) {
-    // check 2^a*3^b
-    mpz_sub(d.z, n, v.z);
-    tmp = mpz_cmpabs(d.z, best_d.z);
-    if (tmp < 0) {
-      mpz_set(approx.z, v.z);
-      mpz_set(best_d.z, d.z);
-      best_a = a;
-      best_b = b;
-    }
-
-    // check 2^{a+1}*3^b
-    if (a+1 <= max_a) {
-      mpz_sub(d.z, d.z, v.z);
-      tmp = mpz_cmpabs(d.z, best_d.z);
-      if (tmp < 0) {
-	mpz_mul_2exp(approx.z, v.z, 1);
-	mpz_set(best_d.z, d.z);
-	best_a = a+1;
-	best_b = b;
-      }
-    }
-
-    // next 'a'
-    a --;
-    mpz_tdiv_q_2exp(v.z, v.z, 1);
-
-    // find largest 'b' such that 2^a3^b <= n
-    mpz_set(tmp_v.z, v.z);
-    while (mpz_cmp(tmp_v.z, n) <= 0) {
-      mpz_set(v.z, tmp_v.z);
-
-      // tmp_v = v*3
-      mpz_mul_2exp(tmp_v.z, v.z, 1);
-      mpz_add(tmp_v.z, tmp_v.z, v.z);
-      b ++;
-    }
-    b --;
-  }
-
-  *out_a = best_a;
-  *out_b = best_b;
-  return approx;
-}
-
-/**
- * Exponentiates using a DB-representation from left-to-right
- */
-double cost_pow_dbns_l2r(const group_cost_t& costs,
-			 const mpz_t in_n,
-			 const int max_a, const int max_b) {
-  mpz_c n(in_n);
-  mpz_c t;
-  double res = 0;
-  int cost_a = 0;
-  int cost_b = 0;
-  int a;
-  int b;
-  int terms = 0;
-
-  while (mpz_cmp_ui(n.z, 0) != 0) {
-    terms ++;
-
-    if (mpz_cmp_ui(n.z, 0) > 0) {
-      mpz_c approx = best_db_approx(&a, &b, n.z, max_a, max_b);
-      if (a > cost_a) cost_a = a;
-      if (b > cost_b) cost_b = b;
-      mpz_sub(n.z, n.z, approx.z);
-    } else {
-      mpz_abs(t.z, n.z);
-      mpz_c approx = best_db_approx(&a, &b, t.z, max_a, max_b);
-      if (a > cost_a) cost_a = a;
-      if (b > cost_b) cost_b = b;
-      mpz_add(n.z, n.z, approx.z);
-    }
-  }
-
-  res = 0;
-  res += cost_a * costs.square;
-  res += cost_b * costs.cube;
-  if (terms > 1) {
-    res += (terms-1) * costs.compose;
-  }
-
-  return res;
-}
-
 
 /**
  * Computes min|N-3^b| and min|N-2*3^b|, then subtracts the smallest and repeats.
@@ -331,102 +134,6 @@ double cost_greedy3(const group_cost_t& costs, const mpz_t in_n) {
   if (term_count > 1)
     res += (term_count-1)*costs.compose;
   return res;
-}
-
-/**
- * Exponentiates using a DB-representation from left-to-right
- * Timing tests show that the high 10% of 'max_a' seems to be sufficient
- * given our costs on quadratic forms.
- */
-double cost_pow_dbns_l2r(const group_cost_t& costs, const mpz_t in_n) {
-  static mpz_c t;
-  double best_cost = FLT_MAX;
-  int k = mpz_sizeinbase(in_n, 3);
-  int max_a = 0;
-  int max_b = 0;
-
-  while (max_b <= k) {
-    mpz_ui_pow_ui(t.z, 3, max_b);
-    mpz_tdiv_q(t.z, in_n, t.z);
-    max_a = mpz_sizeinbase(t.z, 2);
-
-    double cost = cost_pow_dbns_l2r(costs, in_n, max_a, max_b);
-    if (cost < best_cost) {
-      best_cost = cost;
-    }
-
-    max_b ++;
-  }
-
-  return best_cost;
-}
-
-/**
- * Exponentiates using a DB-representation from left-to-right
- */
-double cost_pow_dbns_chain_l2r(const group_cost_t& costs, const mpz_t in_n, const int in_max_a, const int in_max_b) {
-  mpz_c n(in_n);
-  mpz_c t;
-  double res = 0;
-  int big_a = 0;
-  int big_b = 0;
-  int max_a = in_max_a;
-  int max_b = in_max_b;
-  int a;
-  int b;
-  int terms = 0;
-
-  mpz_set(n.z, in_n);
-  while (mpz_cmpabs_ui(n.z, 1) > 0) {
-    terms ++;
-
-    if (mpz_cmp_ui(n.z, 0) > 0) {
-      mpz_c approx = best_db_approx(&a, &b, n.z, max_a, max_b);
-      if (a > big_a) big_a = a;
-      if (b > big_b) big_b = b;
-      mpz_sub(n.z, n.z, approx.z);
-    } else {
-      mpz_abs(t.z, n.z);
-      mpz_c approx = best_db_approx(&a, &b, t.z, max_a, max_b);
-      if (a > big_a) big_a = a;
-      if (b > big_b) big_b = b;
-      mpz_add(n.z, n.z, approx.z);
-    }
-    max_a = a;
-    max_b = b;
-  }
-
-  res += big_a * costs.square;
-  res += big_b * costs.cube;
-  if (terms > 1) {
-    res += (terms-1) * costs.compose;
-  }
-  return res;
-}
-
-/**
- * Exponentiates using a DB-representation from left-to-right
- * Timing tests show that the high 10% of 'max_a' seems to be sufficient
- * given our costs on quadratic forms.
- */
-double cost_pow_dbns_chain_l2r(const group_cost_t& costs, const mpz_t in_n) {
-  static mpz_c t;
-  double best_cost = FLT_MAX;
-  int k = mpz_sizeinbase(in_n, 2);
-  int max_a = 9*k/10;
-  int max_b;
-
-  while (max_a <= k) {
-    mpz_tdiv_q_2exp(t.z, in_n, max_a);
-    max_b = mpz_sizeinbase(t.z, 3);
-
-    double cost = cost_pow_dbns_chain_l2r(costs, in_n, max_a, max_b);
-    if (cost < best_cost) best_cost = cost;
-
-    max_a ++;
-  }
-
-  return best_cost;
 }
 
 /**
@@ -525,7 +232,7 @@ double cost_subreduce(const group_cost_t& costs, const mpz_t in_n, int max_a, in
 
 double cost_subreduce(const group_cost_t& costs, const mpz_t in_n) {
   static mpz_c t;
-  double best_cost = FLT_MAX;
+  double best_cost = std::numeric_limits<double>::max();
   int k = mpz_sizeinbase(in_n, 3);
   int max_a = 0;
   int max_b = 0;
@@ -885,7 +592,7 @@ double cost_prune_subreduce(const group_cost_t& costs,
 
 double cost_prune_subreduce(const group_cost_t& costs, const mpz_t in_n) {
   static mpz_c t;
-  double best_cost = FLT_MAX;
+  double best_cost = std::numeric_limits<double>::max();
   int k = mpz_sizeinbase(in_n, 3);
   int max_b = 0;
   int max_a = 0;
@@ -1113,45 +820,6 @@ double cost_prune_closest(const group_cost_t& costs,
   return 0;
 }
 
-/**
- * Exponentiates using a DB-representation from left-to-right
- */
-void graph_pow_dbns_l2r(const group_cost_t& costs,
-			const mpz_t in_n,
-			const char* filename) {
-  static mpz_c t;
-  ofstream f;
-  int k = mpz_sizeinbase(in_n, 2);
-  int max_a = 0;
-  int max_b;
-  double best_cost = FLT_MAX;
-  int best_max_a = 0;
-  int best_max_b = 0;
-
-  f.open(filename);
-  while (max_a <= k) {
-    cout << "\r" << (max_a*100.0/k) << "%                                            " << flush;
-
-    mpz_tdiv_q_2exp(t.z, in_n, max_a);
-    max_b = mpz_sizeinbase(t.z, 3);
-
-    double cost = cost_pow_dbns_l2r(costs, in_n, max_a, max_b);
-    if (cost < best_cost) {
-      best_cost = cost;
-      best_max_a = max_a;
-      best_max_b = max_b;
-    }
-
-    f << max_a << ", " << cost << endl;
-
-    max_a ++;
-  }
-  cout << "\r                                            \r" << flush;
-  f.close();
-
-  cout << filename << ": " << best_max_a << " " << best_max_b << endl;
-}
-
 /// Generate the output filename.
 string dat_file(const string& type, const string& ext) {
   return "dat/" + type + "-" + ext + ".dat";
@@ -1209,18 +877,18 @@ struct fnc_desc {
   const ICostExp& cost_exp;
 };
 
-int main(int argc, char** argv) {
+void time_methods() {
   CostBinary cost_binary;
   CostNafR2L cost_naf_r2l;
   CostDBNSChainR2L cost_dbns_chain_r2l;
   CostDBNSChainR2L36 cost_dbns_chain_r2l36;
-  CostClosest23Tree cost_closest_23_tree;
+  CostClosest23Tree cost_closest_23_tree(16);
   const fnc_desc descs[] = {
     {"binary", cost_binary},
     {"naf_r2l", cost_naf_r2l},
     {"dbns_chain_r2l", cost_dbns_chain_r2l},
     {"dbns_chain_r2l36", cost_dbns_chain_r2l36},
-    //    {"closest_23_tree", cost_closest_23_tree},
+    {"closest_23_tree", cost_closest_23_tree},
   };
   const int desc_count = sizeof(descs) / sizeof(fnc_desc);
 
@@ -1233,6 +901,14 @@ int main(int argc, char** argv) {
     			  s128_pow_reps, s128_pow_rep_sizes,
 			  desc.type, "128", desc.cost_exp);
   }
+}
+
+int main(int argc, char** argv) {
+  //  time_methods();
+  graph_dbns_l2r_bounds(s64_qform_costs, 1000,
+			dat_file("dbns_l2r_bounded", "64"));
+  graph_dbns_l2r_bounds(s128_qform_costs, 1000,
+			dat_file("dbns_l2r_bounded", "128"));
 
   /*
   for (prime_count = 100; prime_count <= 5000; prime_count += 100) {
