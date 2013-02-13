@@ -1,6 +1,6 @@
 #include "cost_naf.h"
 
-double cost_naf_r2l(const group_cost_t& costs, const mpz_c& in_n) {
+double CostNafR2L::cost(const group_cost_t& costs, const mpz_c& in_n) const {
   mpz_c n(in_n);
   double res = 0;
   int c = 0;

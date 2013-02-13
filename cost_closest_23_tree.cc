@@ -4,7 +4,8 @@ extern "C" {
 #include "liboptarith/closest_23.h"
 }
 
-double cost_closest_23_tree(const group_cost_t& cost, const mpz_c& in_n) {
+double CostClosest23Tree::cost(const group_cost_t& cost,
+			       const mpz_c& in_n) const {
   int term_count;
   two_three_term_t* terms =
       rep_prune_closest(&term_count, in_n.z, &cost, 16);

@@ -30,6 +30,7 @@
 #include "powcosts/cost_closest_23_tree.h"
 #include "powcosts/cost_dbns_chain_r2l.h"
 #include "powcosts/cost_naf.h"
+#include "powcosts/i_cost_exp.h"
 
 extern "C" {
 #include "liboptarith/closest_23.h"
@@ -47,10 +48,8 @@ extern "C" {
 
 using namespace std;
 
-const int prime_count = 10000;
+const int prime_count = 5000;
 const int prime_step  = prime_count/100;
-
-typedef double cost_exp_f(const group_cost_t&, const mpz_c&);
 
 /// Write a gnuplot data file
 void write_gnuplot_datfile(const char* filename,
@@ -1163,7 +1162,7 @@ void time_primorial_growth(const group_cost_t& costs,
 			   const int rep_sizes[65536],
 			   const string& type,
 			   const string& ext,
-			   cost_exp_f* fnc) {
+			   const ICostExp& cost_exp) {
   cout << setprecision(5) << fixed;
 
   // Generate list of primes.
@@ -1183,14 +1182,20 @@ void time_primorial_growth(const group_cost_t& costs,
 	 i--, prime_index++) {
       mpz_mul_ui(primorial.z, primorial.z, primes[prime_index]);
     }
-
-    cout << "Using the first " << prime_index <<
-            " odd primes on a " << ext << "-bit discriminant." << endl;
+    /*
+    gmp_randstate_t rand;
+    gmp_randinit_default(rand);
+    gmp_randseed_ui(rand, 1);
+    mpz_urandomb(primorial.z, rand, 1024);
+    gmp_randclear(rand);
+    */
+    cout << "Using the first " << prime_index
+         << " odd primes on a " << ext << "-bit discriminant." << endl;
     int primorial_size = mpz_sizeinbase(primorial.z, 2);
     cout << "Primorial has " << primorial_size << " bits." << endl;
 
     // Compute time of function.
-    c = fnc(costs, primorial);
+    c = cost_exp.cost(costs, primorial);
     cout << type << ": " << c << endl;
     append_gnuplot_datfile(out_file, prime_index, c);
 
@@ -1201,16 +1206,21 @@ void time_primorial_growth(const group_cost_t& costs,
 
 struct fnc_desc {
   const string& type;
-  cost_exp_f* fnc;
+  const ICostExp& cost_exp;
 };
 
 int main(int argc, char** argv) {
+  CostBinary cost_binary;
+  CostNafR2L cost_naf_r2l;
+  CostDBNSChainR2L cost_dbns_chain_r2l;
+  CostDBNSChainR2L36 cost_dbns_chain_r2l36;
+  CostClosest23Tree cost_closest_23_tree;
   const fnc_desc descs[] = {
-    {"binary", &cost_binary},
-    {"naf_r2l", &cost_naf_r2l},
-    {"dbns_chain_r2l", &cost_dbns_chain_r2l},
-    {"dbns_chain_r2l36", &cost_dbns_chain_r2l36},
-    //    {"closest_23_tree", &cost_closest_23_tree},
+    {"binary", cost_binary},
+    {"naf_r2l", cost_naf_r2l},
+    {"dbns_chain_r2l", cost_dbns_chain_r2l},
+    {"dbns_chain_r2l36", cost_dbns_chain_r2l36},
+    //    {"closest_23_tree", cost_closest_23_tree},
   };
   const int desc_count = sizeof(descs) / sizeof(fnc_desc);
 
@@ -1218,11 +1228,32 @@ int main(int argc, char** argv) {
     const fnc_desc& desc = descs[i];
     time_primorial_growth(s64_qform_costs,
 			  s64_pow_reps, s64_pow_rep_sizes,
-			  desc.type, "64", desc.fnc);
+			  desc.type, "64", desc.cost_exp);
     time_primorial_growth(s128_qform_costs,
-			  s128_pow_reps, s128_pow_rep_sizes,
-			  desc.type, "128", desc.fnc);
+    			  s128_pow_reps, s128_pow_rep_sizes,
+			  desc.type, "128", desc.cost_exp);
   }
+
+  /*
+  for (prime_count = 100; prime_count <= 5000; prime_count += 100) {
+    prime_step = prime_count;
+    cost_to_mask.clear();
+    cout << setprecision(5) << fixed;
+    for (dbns_mask = 0; dbns_mask < 4096; dbns_mask++) {
+      time_primorial_growth(s64_qform_costs,
+			    s64_pow_reps, s64_pow_rep_sizes,
+			    "out", "64", &cost_weird_dbns);
+    }
+    //    auto iter = cost_to_mask.begin();
+    //    for (int i = 0; i < 100; i++) {
+    //      cout << "mask=" << iter->second << " cost=" << iter->first << endl;
+    //      iter++;
+    //    }
+    auto iter = cost_to_mask.begin();
+    cout << "count=" << prime_count << ' '
+	 << "mask=" << iter->second << endl;
+  }
+  */
   return 0;
 }
 

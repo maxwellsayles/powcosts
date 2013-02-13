@@ -4,13 +4,12 @@
 
 #include <gmp.h>
 
-#include "powcosts/mpz_c.h"
+#include "powcosts/i_cost_exp.h"
 
-extern "C" {
-#include "liboptarith/group.h"
-}
-
-double cost_binary(const group_cost_t& cost, const mpz_c& in_n);
+class CostBinary : public ICostExp {
+ public:
+  double cost(const group_cost_t& cost, const mpz_c& in_n) const;
+};
 
 #endif
 
