@@ -906,7 +906,7 @@ void time_methods() {
 int main(int argc, char** argv) {
   //  time_methods();
   graph_dbns_l2r_bounds(s64_qform_costs, 1000,
-			dat_file("dbns_l2r_bounded", "64"));
+  			dat_file("dbns_l2r_bounded", "64"));
   graph_dbns_l2r_bounds(s128_qform_costs, 1000,
 			dat_file("dbns_l2r_bounded", "128"));
 
