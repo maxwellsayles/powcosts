@@ -176,4 +176,11 @@ void graph_dbns_l2r_bounds(const group_cost_t& costs,
     // Write out cost in millis.
     append_gnuplot_datfile(filename, max_a, cost / 1000000);
   }
+
+  cout << setprecision(5) << fixed;
+  cout << "Time to exponentiate if left unbounded: "
+       << dbns_l2r_bounded(costs, primorial.z,
+			   numeric_limits<int>::max(),
+			   numeric_limits<int>::max())
+       << endl;
 }
