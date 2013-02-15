@@ -9,7 +9,7 @@
 class CostGreedyPM1 : public ICostExp {
  public:
   explicit CostGreedyPM1(const int k) : k_(k) {}
-  double cost(const group_cost_t& cost, const mpz_c& in_n) const;
+  double cost(const group_cost_t& cost, const mpz_c& in_n) const override;
  private:
   int k_;
 };

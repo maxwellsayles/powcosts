@@ -7,7 +7,7 @@
 class CostClosest23Tree : public ICostExp {
  public:
   explicit CostClosest23Tree(const int k) : k_(k) {}
-  double cost(const group_cost_t& cost, const mpz_c& in_n) const;
+  double cost(const group_cost_t& cost, const mpz_c& in_n) const override;
  private:
   const int k_;
 };

@@ -15,7 +15,7 @@ class Cost_DBNS_L2R_Bounded : public ICostExp {
     , max_b_(max_b)
   {
   }
-  double cost(const group_cost_t& cost, const mpz_c& in_n) const;
+  double cost(const group_cost_t& cost, const mpz_c& in_n) const override;
  private:
   const int max_a_;
   const int max_b_;

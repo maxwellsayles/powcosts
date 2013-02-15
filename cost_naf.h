@@ -6,7 +6,7 @@
 
 class CostNafR2L : public ICostExp {
  public:
-  double cost(const group_cost_t& cost, const mpz_c& in_n) const;
+  double cost(const group_cost_t& cost, const mpz_c& in_n) const override;
 };
 
 #endif
