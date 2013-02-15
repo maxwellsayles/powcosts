@@ -16,7 +16,7 @@
 struct PartialCost {
  public:
   PartialCost(const group_cost_t& costs_, const mpz_c& n)
-    : costs(&costs_)
+    : costs(costs_)
     , terms(0)
     , squares(0)
     , cubes(0)
@@ -26,7 +26,7 @@ struct PartialCost {
 
   PartialCost(const group_cost_t& costs_,
 	      std::shared_ptr<const mpz_c> n)
-    : costs(&costs_)
+    : costs(costs_)
     , terms(0)
     , squares(0)
     , cubes(0)
@@ -37,7 +37,7 @@ struct PartialCost {
   PartialCost(const group_cost_t& costs_,
 	      const int terms_, const int squares_, const int cubes_,
 	      const mpz_c& remainder_)
-    : costs(&costs_)
+    : costs(costs_)
     , terms(terms_)
     , squares(squares_)
     , cubes(cubes_)
@@ -48,7 +48,7 @@ struct PartialCost {
   PartialCost(const group_cost_t& costs_,
 	      const int terms_, const int squares_, const int cubes_,
 	      std::shared_ptr<const mpz_c> remainder_)
-    : costs(&costs_)
+    : costs(costs_)
     , terms(terms_)
     , squares(squares_)
     , cubes(cubes_)
@@ -66,19 +66,12 @@ struct PartialCost {
   }
 
   /// Every member is const, so I don't see how assignment could be possible.
-  PartialCost& operator=(const PartialCost& that) {
-    costs = that.costs;
-    terms = that.terms;
-    squares = that.squares;
-    cubes = that.cubes;
-    remainder = that.remainder;
-    return *this;
-  }
+  PartialCost& operator=(const PartialCost& that);
 
   /// compute the cost incurred so far
   double partial_cost() const {
-    return (terms - 1) * costs->compose +
-	squares * costs->square + cubes * costs->cube;
+    return (terms - 1) * costs.compose +
+	squares * costs.square + cubes * costs.cube;
   }
 
   /// Return true if the remainder is less,
@@ -103,18 +96,11 @@ struct PartialCost {
     return false;
   }
 
-  const group_cost_t* costs;
-  int terms;
-  int squares;
-  int cubes;
-  std::shared_ptr<const mpz_c> remainder;
-  /*
   const group_cost_t& costs;
   const int terms;
   const int squares;
   const int cubes;
   const std::shared_ptr<const mpz_c> remainder;
-  */
 };
 
 #endif
