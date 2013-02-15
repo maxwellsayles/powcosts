@@ -18,6 +18,8 @@
 #include <math.h>
 #include <stdint.h>
 #include <stdlib.h>
+#include <sys/time.h>
+#include <sys/resource.h>
 
 #include "term.h"
 #include "mpz_c.h"
@@ -28,6 +30,7 @@
 #include "powcosts/cost_closest_23_tree.h"
 #include "powcosts/cost_dbns_chain_r2l.h"
 #include "powcosts/cost_dbns_l2r.h"
+#include "powcosts/cost_greedy_pm1.h"
 #include "powcosts/cost_naf.h"
 #include "powcosts/i_cost_exp.h"
 #include "powcosts/util.h"
@@ -882,13 +885,17 @@ void time_methods() {
   CostNafR2L cost_naf_r2l;
   CostDBNSChainR2L cost_dbns_chain_r2l;
   CostDBNSChainR2L36 cost_dbns_chain_r2l36;
+  CostGreedyPM1 cost_greedy_pm1(1);
+  CostGreedyPM1 cost_greedy_pm1_tree(16);
   CostClosest23Tree cost_closest_23_tree(16);
   const fnc_desc descs[] = {
-    {"binary", cost_binary},
-    {"naf_r2l", cost_naf_r2l},
-    {"dbns_chain_r2l", cost_dbns_chain_r2l},
-    {"dbns_chain_r2l36", cost_dbns_chain_r2l36},
-    {"closest_23_tree", cost_closest_23_tree},
+    //    {"binary", cost_binary},
+    //    {"naf_r2l", cost_naf_r2l},
+    //    {"dbns_chain_r2l", cost_dbns_chain_r2l},
+    //    {"dbns_chain_r2l36", cost_dbns_chain_r2l36},
+    {"greedy_pm1", cost_greedy_pm1},
+    {"greedy_pm1_tree", cost_greedy_pm1_tree},
+    //    {"closest_23_tree", cost_closest_23_tree},
   };
   const int desc_count = sizeof(descs) / sizeof(fnc_desc);
 
@@ -904,11 +911,13 @@ void time_methods() {
 }
 
 int main(int argc, char** argv) {
-  //  time_methods();
-  graph_dbns_l2r_bounds(s64_qform_costs, 1000,
-  			dat_file("dbns_l2r_bounded", "64"));
-  graph_dbns_l2r_bounds(s128_qform_costs, 1000,
-			dat_file("dbns_l2r_bounded", "128"));
+  struct rlimit l = {1024ULL*1024ULL*1024ULL, 1024ULL*1024ULL*1024ULL};
+  setrlimit(RLIMIT_AS, &l);
+  time_methods();
+  //graph_dbns_l2r_bounds(s64_qform_costs, 1000,
+  //  			dat_file("dbns_l2r_bounded", "64"));
+  //graph_dbns_l2r_bounds(s128_qform_costs, 1000,
+  //                    dat_file("dbns_l2r_bounded", "128"));
 
   /*
   for (prime_count = 100; prime_count <= 5000; prime_count += 100) {

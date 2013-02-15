@@ -12,10 +12,10 @@
 #define MPZ_C__INCLUDED
 
 #include <gmp.h>
-#ifndef __STDC_LIMIT_MACROS
-#define __STDC_LIMIT_MACROS
-#endif
 #include <stdint.h>
+
+#include <limits>
+#include <utility>
 
 extern "C" {
 #include "liboptarith/math_mpz.h"
@@ -38,12 +38,12 @@ class mpz_c {
   mpz_c(const mpz_t that) {
     mpz_init_set(z, that);
   }
-  
+
   mpz_c(const mpz_c& that) {
     mpz_init_set(z, that.z);
   }
   
-  virtual ~mpz_c() {
+  ~mpz_c() {
     mpz_clear(z);
   }
 
@@ -117,7 +117,8 @@ class mpz_c {
   
   /// this = this / 2^a where a <= max2.
   /// Return a.
-  int reduce2(int32_t max2 = INT32_MAX) {
+  int reduce2(int32_t max2 = std::numeric_limits<int32_t>::max()) {
+    if (mpz_cmp_ui(z, 0) == 0) return 0;
     int res = mpz_scan1(z, 0);
     if (res > max2) res = max2;
     if (res > 0) {
@@ -128,13 +129,23 @@ class mpz_c {
   
   /// this = this / 3^b where b <= max3.
   /// Return b.
-  int reduce3(int32_t max3 = INT32_MAX) {
+  int reduce3(int32_t max3 = std::numeric_limits<int32_t>::max()) {
+    if (mpz_cmp_ui(z, 0) == 0) return 0;
     int res = 0;
     while (mpz_mod3(z) == 0 && res < max3) {
       div3();
       res ++;
     }
     return res;
+  }
+
+  // Reduce by both 2 and 3.
+  std::pair<int, int> reduce2_3() {
+    if (mpz_cmp_ui(z, 0) == 0)
+      return std::make_pair(0, 0);
+    int a = reduce2();
+    int b = reduce3();
+    return std::make_pair(a, b);
   }
   
   mpz_t z;
