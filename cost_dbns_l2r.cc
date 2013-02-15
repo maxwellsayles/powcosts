@@ -49,7 +49,7 @@ static double dbns_l2r_bounded(const group_cost_t& costs,
  * Timing tests show that the high 10% of 'max_a' seems to be sufficient
  * given our costs on quadratic forms.
  */
-double cost_pow_dbns_l2r(const group_cost_t& costs, const mpz_t in_n) {
+static double dbns_l2r(const group_cost_t& costs, const mpz_t in_n) {
   mpz_c t;
   double best_cost = std::numeric_limits<double>::max();
   int k = mpz_sizeinbase(in_n, 3);
@@ -75,10 +75,10 @@ double cost_pow_dbns_l2r(const group_cost_t& costs, const mpz_t in_n) {
 /**
  * Exponentiates using a DB-representation from left-to-right
  */
-static double cost_pow_dbns_chain_l2r(const group_cost_t& costs,
-				      const mpz_t in_n,
-				      const int in_max_a,
-				      const int in_max_b) {
+static double dbns_chain_l2r_bounded(const group_cost_t& costs,
+				     const mpz_t in_n,
+				     const int in_max_a,
+				     const int in_max_b) {
   mpz_c n(in_n);
   mpz_c t;
   double res = 0;
@@ -123,7 +123,7 @@ static double cost_pow_dbns_chain_l2r(const group_cost_t& costs,
  * Timing tests show that the high 10% of 'max_a' seems to be sufficient
  * given our costs on quadratic forms.
  */
-double cost_pow_dbns_chain_l2r(const group_cost_t& costs, const mpz_t in_n) {
+double dbns_chain_l2r(const group_cost_t& costs, const mpz_t in_n) {
   mpz_c t;
   double best_cost = std::numeric_limits<double>::max();
   int k = mpz_sizeinbase(in_n, 2);
@@ -134,7 +134,7 @@ double cost_pow_dbns_chain_l2r(const group_cost_t& costs, const mpz_t in_n) {
     mpz_tdiv_q_2exp(t.z, in_n, max_a);
     max_b = mpz_sizeinbase(t.z, 3);
 
-    double cost = cost_pow_dbns_chain_l2r(costs, in_n, max_a, max_b);
+    double cost = dbns_chain_l2r_bounded(costs, in_n, max_a, max_b);
     if (cost < best_cost) best_cost = cost;
 
     max_a ++;
@@ -149,6 +149,10 @@ double Cost_DBNS_L2R_Bounded::cost(const group_cost_t& cost,
   return dbns_l2r_bounded(cost, in_n.z, max_a_, max_b_);
 }
 
+double Cost_DBNS_L2R::cost(const group_cost_t& cost,
+			   const mpz_c& in_n) const {
+  return dbns_l2r(cost, in_n.z);
+}
 
 void graph_dbns_l2r_bounds(const group_cost_t& costs,
 			   int primorial_index,

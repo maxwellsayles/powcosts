@@ -885,6 +885,7 @@ void time_methods() {
   CostNafR2L cost_naf_r2l;
   CostDBNSChainR2L cost_dbns_chain_r2l;
   CostDBNSChainR2L36 cost_dbns_chain_r2l36;
+  Cost_DBNS_L2R cost_dbns_l2r;
   CostGreedyPM1 cost_greedy_pm1(1);
   CostGreedyPM1 cost_greedy_pm1_tree(16);
   CostClosest23Tree cost_closest_23_tree(16);
@@ -893,8 +894,9 @@ void time_methods() {
     //    {"naf_r2l", cost_naf_r2l},
     //    {"dbns_chain_r2l", cost_dbns_chain_r2l},
     //    {"dbns_chain_r2l36", cost_dbns_chain_r2l36},
-    {"greedy_pm1", cost_greedy_pm1},
-    {"greedy_pm1_tree", cost_greedy_pm1_tree},
+    {"dbns_l2r", cost_dbns_l2r},
+    //    {"greedy_pm1", cost_greedy_pm1},
+    //    {"greedy_pm1_tree", cost_greedy_pm1_tree},
     //    {"closest_23_tree", cost_closest_23_tree},
   };
   const int desc_count = sizeof(descs) / sizeof(fnc_desc);
