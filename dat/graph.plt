@@ -8,3 +8,11 @@ set xlabel "Maximum squares permitted."
 set ylabel "Milliseconds"
 plot "dbns_l2r_vary_bounds-64.dat" with lines title '59-bit discriminant (64-bit implementation)', \
      "dbns_l2r_vary_bounds-128.dat" with lines title '118-bit discriminant (128-bit implementation)'
+
+# Graph the difference between shortest additive chains and cost based
+# additive chains
+set output 'add_chains-64.eps'
+set xlabel "Value of Exponent"
+set ylabel "Nanoseconds"
+plot "short_add_chain-64.dat" every 128 title "Shortest chain", \
+     "add_chain-64.dat" every 128 title "Cost based"
