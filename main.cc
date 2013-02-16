@@ -32,6 +32,7 @@
 #include "powcosts/cost_dbns_l2r.h"
 #include "powcosts/cost_greedy_pm1.h"
 #include "powcosts/cost_naf.h"
+#include "powcosts/cost_opt_add_chain.h"
 #include "powcosts/i_cost_exp.h"
 #include "powcosts/util.h"
 
@@ -355,130 +356,6 @@ double cost_pow_dbns_pre_list(const group_cost_t& costs,
     res += cost_pow_dbns_pre_u16(costs, reps, rep_sizes, list[i]);
   }
   return res;
-}
-
-double cost_strict_chain(const group_cost_t& costs, const mpz_c x) {
-  if (mpz_cmp_ui(x.z, 1) == 0)
-    return 0;
-  if (mpz_cmp_ui(x.z, 2) == 0)
-    return costs.square;
-  if (mpz_cmp_ui(x.z, 3) == 0)
-    return costs.cube;
-
-  vector<mpz_c> values;
-  values.push_back(x);
-
-  map<mpz_c, double> mem;
-  mem[mpz_c(1)] = 0;
-  mem[mpz_c(2)] = costs.square;
-  mem[mpz_c(3)] = costs.cube;
-
-  mpz_c t1;
-  mpz_c t2;
-  map<mpz_c, double>::const_iterator t1_iter;
-  map<mpz_c, double>::const_iterator t2_iter;
-
-  while (values.size() > 0) {
-    mpz_c cur = values.back();
-    if (mem.find(cur) != mem.end()) {
-      values.pop_back();
-      continue;
-    }
-
-    // let r = x mod 6
-    t1.div2(cur);
-    int r = (mpz_mod3(t1.z) << 1) | (cur.z->_mp_d[0]&1);
-    switch (r) {
-    case 0:
-      // min ( s(cur/3), s(cur/2) )
-      t1.div3(cur);
-      t2.div2(cur);
-      t1_iter = mem.find(t1);
-      t2_iter = mem.find(t2);
-      if (t1_iter != mem.end() && t2_iter != mem.end()) {
-	values.pop_back();
-	mem[cur] = min(costs.cube + t1_iter->second, costs.square + t2_iter->second);
-      } else {
-	// compute each of the intermediates
-	values.push_back(t1);
-	values.push_back(t2);
-      }
-      break;
-
-    case 1:
-      // 1 + s(cur-1)
-      mpz_sub_ui(t1.z, cur.z, 1);
-      t1_iter = mem.find(t1);
-      if (t1_iter != mem.end()) {
-	values.pop_back();
-	mem[cur] = costs.compose + t1_iter->second;
-      } else {
-	values.push_back(t1);
-      }
-      break;
-
-    case 2:
-      // s(cur/2)
-      t1.div2(cur);
-      t1_iter = mem.find(t1);
-      if (t1_iter != mem.end()) {
-	values.pop_back();
-	mem[cur] = costs.square + t1_iter->second;
-      } else {
-	values.push_back(t1);
-      }
-      break;
-
-    case 3:
-      // min ( s(cur/3), 1+s((cur-1)/2) )
-      mpz_sub_ui(t1.z, cur.z, 1);
-      t2.div2(t1);
-      t1.div3(cur);
-
-      t1_iter = mem.find(t1);
-      t2_iter = mem.find(t2);
-      if (t1_iter != mem.end() && t2_iter != mem.end()) {
-	values.pop_back();
-	mem[cur] = min(costs.cube + t1_iter->second, costs.square + costs.compose + t2_iter->second);
-      } else {
-	values.push_back(t1);
-	values.push_back(t2);
-      }
-      break;
-
-    case 4:
-      // min ( s(cur/2), s((cur-1)/3) )
-      mpz_sub_ui(t1.z, cur.z, 1);
-      t2.div3(t1);
-      t1.div2(cur);
-
-      t1_iter = mem.find(t1);
-      t2_iter = mem.find(t2);
-      if (t1_iter != mem.end() && t2_iter != mem.end()) {
-	values.pop_back();
-	mem[cur] = min(costs.square + t1_iter->second, costs.cube + costs.compose + t2_iter->second);
-      } else {
-	values.push_back(t1);
-	values.push_back(t2);
-      }
-      break;
-
-    case 5:
-      // 1 + s((cur-1)/2)
-      mpz_sub_ui(t1.z, cur.z, 1);
-      t1.div2(t1);
-
-      t1_iter = mem.find(t1);
-      if (t1_iter != mem.end()) {
-	values.pop_back();
-	mem[cur] = costs.square + costs.compose + t1_iter->second;
-      } else {
-	values.push_back(t1);
-      }
-      break;
-    }
-  }
-  return mem[x];
 }
 
 /**
@@ -829,23 +706,17 @@ string dat_file(const string& type, const string& ext) {
 }
 
 void time_primorial_growth(const group_cost_t& costs,
-			   factored_two_three_term16_t* reps[65536],
-			   const int rep_sizes[65536],
 			   const string& type,
 			   const string& ext,
 			   const ICostExp& cost_exp) {
   cout << setprecision(5) << fixed;
-
-  // Generate list of primes.
   uint32_t* primes = first_n_primes(prime_count);
   primes[0] = 1;  // We only want odd primes.
   mpz_c primorial(1);
   int prime_index = 0;
-  double c;
   const string out_file = dat_file(type, ext);
   remove(out_file.c_str());
 
-  // Iterate over primorials.
   while (prime_index < prime_count) {
     // Multiply in the next prime.
     for (int i = prime_step;
@@ -853,26 +724,43 @@ void time_primorial_growth(const group_cost_t& costs,
 	 i--, prime_index++) {
       mpz_mul_ui(primorial.z, primorial.z, primes[prime_index]);
     }
-    /*
-    gmp_randstate_t rand;
-    gmp_randinit_default(rand);
-    gmp_randseed_ui(rand, 1);
-    mpz_urandomb(primorial.z, rand, 1024);
-    gmp_randclear(rand);
-    */
+
     cout << "Using the first " << prime_index
          << " odd primes on a " << ext << "-bit discriminant." << endl;
     int primorial_size = mpz_sizeinbase(primorial.z, 2);
     cout << "Primorial has " << primorial_size << " bits." << endl;
 
     // Compute time of function.
-    c = cost_exp.cost(costs, primorial);
+    double c = cost_exp.cost(costs, primorial);
     cout << type << ": " << c << endl;
     append_gnuplot_datfile(out_file, prime_index, c);
-
     cout << endl;
   }
   free(primes);
+}
+
+/// Time exponentiation in the range [min_value, max_value] inclusive.
+void time_range(const group_cost_t& costs,
+		const string& type,
+		const string& ext,
+		const ICostExp& cost_exp,
+		const int min_value,
+		const int max_value,
+		const int step_value) {
+  cout << setprecision(5) << fixed;
+  const string out_file = dat_file(type, ext);
+  remove(out_file.c_str());
+
+  for (int i = min_value; i <= max_value; i += step_value) {
+    // Compute time of function.
+    cout << "Exponent " << i << " on "
+	 << ext << "-bit implementation." << endl;
+    double c = cost_exp.cost(costs, i);
+    cout << type << ": " << c << endl;
+    append_gnuplot_datfile(out_file, i, c);
+
+    cout << endl;
+  }
 }
 
 struct fnc_desc {
@@ -904,18 +792,30 @@ void time_methods() {
   for (int i = 0; i < desc_count; i++) {
     const fnc_desc& desc = descs[i];
     time_primorial_growth(s64_qform_costs,
-			  s64_pow_reps, s64_pow_rep_sizes,
 			  desc.type, "64", desc.cost_exp);
     time_primorial_growth(s128_qform_costs,
-    			  s128_pow_reps, s128_pow_rep_sizes,
 			  desc.type, "128", desc.cost_exp);
   }
 }
 
+void time_16bit_methods() {
+  //  time_range(s64_qform_costs,
+  //	     "opt_add_chain", "64", CostOptAddChain(),
+  //	     1, 65535, 1);
+  //  time_range(s128_qform_costs,
+  //	     "opt_add_chain", "128", CostOptAddChain(),
+  //	     1, 65535, 1);
+  time_range(s64_qform_costs,
+	     "closest_23_tree_16bit", "64", CostClosest23Tree(16),
+	     1, 65535, 1);
+}
+
+
 int main(int argc, char** argv) {
   struct rlimit l = {1024ULL*1024ULL*1024ULL, 1024ULL*1024ULL*1024ULL};
   setrlimit(RLIMIT_AS, &l);
-  time_methods();
+  //  time_methods();
+  time_16bit_methods();
   //graph_dbns_l2r_bounds(s64_qform_costs, 1000,
   //  			dat_file("dbns_l2r_bounded", "64"));
   //graph_dbns_l2r_bounds(s128_qform_costs, 1000,
