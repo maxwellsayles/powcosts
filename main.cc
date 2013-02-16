@@ -800,10 +800,10 @@ void time_methods() {
 
 void time_16bit_methods() {
   time_range(s64_qform_costs,
-	     "add_chain", "64", CostAddChain(),
+	     "add_chain1", "64", CostAddChain(),
 	     1, 65535, 1);
   time_range(s128_qform_costs,
-	     "add_chain", "128", CostAddChain(),
+  	     "add_chain", "128", CostAddChain(),
 	     1, 65535, 1);
   //  time_range(s64_qform_costs,
   //	     "closest_23_tree_16bit", "64", CostClosest23Tree(16),
