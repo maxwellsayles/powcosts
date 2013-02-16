@@ -26,13 +26,13 @@
 #include "prune_c.h"
 #include "rep_c.h"
 
+#include "powcosts/cost_add_chain.h"
 #include "powcosts/cost_binary.h"
 #include "powcosts/cost_closest_23_tree.h"
 #include "powcosts/cost_dbns_chain_r2l.h"
 #include "powcosts/cost_dbns_l2r.h"
 #include "powcosts/cost_greedy_pm1.h"
 #include "powcosts/cost_naf.h"
-#include "powcosts/cost_opt_add_chain.h"
 #include "powcosts/i_cost_exp.h"
 #include "powcosts/util.h"
 
@@ -799,15 +799,15 @@ void time_methods() {
 }
 
 void time_16bit_methods() {
-  //  time_range(s64_qform_costs,
-  //	     "opt_add_chain", "64", CostOptAddChain(),
-  //	     1, 65535, 1);
-  //  time_range(s128_qform_costs,
-  //	     "opt_add_chain", "128", CostOptAddChain(),
-  //	     1, 65535, 1);
   time_range(s64_qform_costs,
-	     "closest_23_tree_16bit", "64", CostClosest23Tree(16),
+	     "add_chain", "64", CostAddChain(),
 	     1, 65535, 1);
+  time_range(s128_qform_costs,
+	     "add_chain", "128", CostAddChain(),
+	     1, 65535, 1);
+  //  time_range(s64_qform_costs,
+  //	     "closest_23_tree_16bit", "64", CostClosest23Tree(16),
+  //	     1, 65535, 1);
 }
 
 

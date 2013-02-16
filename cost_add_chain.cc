@@ -1,13 +1,11 @@
-#include "powcosts/cost_opt_add_chain.h"
+#include "powcosts/cost_add_chain.h"
 
 #include <map>
 #include <vector>
 
 using namespace std;
 
-// TODO: We may need to test +/- 1 for some residues
-
-double CostOptAddChain::cost(const group_cost_t& costs,
+double CostAddChain::cost(const group_cost_t& costs,
 			     const mpz_c& x) const {
   if (mpz_cmp_ui(x.z, 1) == 0)
     return 0;
@@ -52,41 +50,49 @@ double CostOptAddChain::cost(const group_cost_t& costs,
 		       costs.square + t2_iter->second);
       } else {
 	// compute each of the intermediates
-	values.push_back(t1);
-	values.push_back(t2);
+	if (t1_iter == mem.end()) values.push_back(t1);
+	if (t2_iter == mem.end()) values.push_back(t2);
       }
       break;
 
     case 1:
-      // 1 + s(cur-1)
+      // 1 + s(cur-1), s(cur+1) - 1
       mpz_sub_ui(t1.z, cur.z, 1);
+      mpz_add_ui(t2.z, cur.z, 1);
       t1_iter = mem.find(t1);
-      if (t1_iter != mem.end()) {
+      t2_iter = mem.find(t2);
+      if (t1_iter != mem.end() && t2_iter != mem.end()) {
 	values.pop_back();
-	mem[cur] = costs.compose + t1_iter->second;
+	mem[cur] = min(costs.compose + t1_iter->second,
+		       costs.compose + t2_iter->second);
       } else {
-	values.push_back(t1);
+	if (t1_iter == mem.end()) values.push_back(t1);
+	if (t2_iter == mem.end()) values.push_back(t2);
       }
       break;
 
     case 2:
-      // s(cur/2)
+      // s(cur/2), s((cur+1)/3) - 1
       t1.div2(cur);
+      mpz_add_ui(t2.z, cur.z, 1);
+      t2.div3();
       t1_iter = mem.find(t1);
-      if (t1_iter != mem.end()) {
+      t2_iter = mem.find(t2);
+      if (t1_iter != mem.end() && t2_iter != mem.end()) {
 	values.pop_back();
-	mem[cur] = costs.square + t1_iter->second;
+	mem[cur] = min(costs.square + t1_iter->second,
+		       costs.compose + costs.cube + t2_iter->second);
       } else {
-	values.push_back(t1);
+	if (t1_iter == mem.end()) values.push_back(t1);
+	if (t2_iter == mem.end()) values.push_back(t2);
       }
       break;
 
     case 3:
       // min ( s(cur/3), 1+s((cur-1)/2) )
-      mpz_sub_ui(t1.z, cur.z, 1);
-      t2.div2(t1);
       t1.div3(cur);
-
+      mpz_sub_ui(t2.z, cur.z, 1);
+      t2.div2(t1);
       t1_iter = mem.find(t1);
       t2_iter = mem.find(t2);
       if (t1_iter != mem.end() && t2_iter != mem.end()) {
@@ -94,40 +100,40 @@ double CostOptAddChain::cost(const group_cost_t& costs,
 	mem[cur] = min(costs.cube + t1_iter->second,
 		       costs.square + costs.compose + t2_iter->second);
       } else {
-	values.push_back(t1);
-	values.push_back(t2);
+	if (t1_iter == mem.end()) values.push_back(t1);
+	if (t2_iter == mem.end()) values.push_back(t2);
       }
       break;
 
     case 4:
-      // min ( s(cur/2), s((cur-1)/3) )
-      mpz_sub_ui(t1.z, cur.z, 1);
-      t2.div3(t1);
+      // min ( s(cur/2), s(cur-1) )
       t1.div2(cur);
-
+      mpz_sub_ui(t2.z, cur.z, 1);
       t1_iter = mem.find(t1);
       t2_iter = mem.find(t2);
       if (t1_iter != mem.end() && t2_iter != mem.end()) {
 	values.pop_back();
 	mem[cur] = min(costs.square + t1_iter->second,
-		       costs.cube + costs.compose + t2_iter->second);
+		       costs.compose + t2_iter->second);
       } else {
-	values.push_back(t1);
-	values.push_back(t2);
+	if (t1_iter == mem.end()) values.push_back(t1);
+	if (t2_iter == mem.end()) values.push_back(t2);
       }
       break;
 
     case 5:
-      // 1 + s((cur-1)/2)
+      // 1 + s(cur-1), s(cur+1) - 1
       mpz_sub_ui(t1.z, cur.z, 1);
-      t1.div2(t1);
-
+      mpz_add_ui(t2.z, cur.z, 1);
       t1_iter = mem.find(t1);
-      if (t1_iter != mem.end()) {
+      t2_iter = mem.find(t2);
+      if (t1_iter != mem.end() && t2_iter != mem.end()) {
 	values.pop_back();
-	mem[cur] = costs.square + costs.compose + t1_iter->second;
+	mem[cur] = min(costs.compose + t1_iter->second,
+		       costs.compose + t2_iter->second);
       } else {
-	values.push_back(t1);
+	if (t1_iter == mem.end()) values.push_back(t1);
+	if (t2_iter == mem.end()) values.push_back(t2);
       }
       break;
     }
