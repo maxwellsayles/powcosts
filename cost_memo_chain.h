@@ -1,6 +1,6 @@
 /**
- * @file cost_add_chain.h
- * Computes shortest additive-only strictly chains partitions.
+ * @file cost_memo_chain.h
+ * Computes optimal additive-only strictly chains partitions.
  * Expressions are of the form
  * n = 2^a1*3^b1 + 2^a2*3^b3 + ... 2^an*3^bn
  * where 2^ai*3^bi is strictly less than and divides 2^aj*3^bj for all i < j.
@@ -10,8 +10,8 @@
  * value of the input).
  */
 #pragma once
-#ifndef COST_ADD_CHAIN_H_
-#define COST_ADD_CHAIN_H_
+#ifndef COST_MEMO_CHAIN_H_
+#define COST_MEMO_CHAIN_H_
 
 #include <map>
 
@@ -19,7 +19,7 @@
 
 #include "powcosts/i_cost_exp.h"
 
-class CostAddChain : public ICostExp {
+class CostMemoChain : public ICostExp {
  public:
   void clear_cache() { mem_.clear(); }
   double cost(const group_cost_t& cost, const mpz_c& in_n) const override;

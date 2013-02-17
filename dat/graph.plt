@@ -14,5 +14,5 @@ plot "dbns_l2r_vary_bounds-64.dat" with lines title '59-bit discriminant (64-bit
 set output 'add_chains-64.eps'
 set xlabel "Value of Exponent"
 set ylabel "Nanoseconds"
-plot "short_add_chain-64.dat" every 128 title "Shortest chain", \
-     "add_chain-64.dat" every 128 title "Cost based"
+plot "add_chain-64.dat" every 128 title "Shortest chain", \
+     "memo_chain-64.dat" every 128 title "Cost based"

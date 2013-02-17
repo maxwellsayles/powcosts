@@ -32,6 +32,7 @@
 #include "powcosts/cost_dbns_chain_r2l.h"
 #include "powcosts/cost_dbns_l2r.h"
 #include "powcosts/cost_greedy_pm1.h"
+#include "powcosts/cost_memo_chain.h"
 #include "powcosts/cost_naf.h"
 #include "powcosts/i_cost_exp.h"
 #include "powcosts/util.h"
@@ -782,9 +783,9 @@ void time_methods() {
     //    {"naf_r2l", cost_naf_r2l},
     //    {"dbns_chain_r2l", cost_dbns_chain_r2l},
     //    {"dbns_chain_r2l36", cost_dbns_chain_r2l36},
-    {"dbns_l2r", cost_dbns_l2r},
+    //    {"dbns_l2r", cost_dbns_l2r},
     //    {"greedy_pm1", cost_greedy_pm1},
-    //    {"greedy_pm1_tree", cost_greedy_pm1_tree},
+    {"greedy_pm1_tree", cost_greedy_pm1_tree},
     //    {"closest_23_tree", cost_closest_23_tree},
   };
   const int desc_count = sizeof(descs) / sizeof(fnc_desc);
@@ -800,10 +801,16 @@ void time_methods() {
 
 void time_16bit_methods() {
   time_range(s64_qform_costs,
-	     "add_chain1", "64", CostAddChain(),
+	     "add_chain", "64", CostAddChain(),
 	     1, 65535, 1);
   time_range(s128_qform_costs,
   	     "add_chain", "128", CostAddChain(),
+	     1, 65535, 1);
+  time_range(s64_qform_costs,
+	     "memo_chain", "64", CostMemoChain(),
+	     1, 65535, 1);
+  time_range(s128_qform_costs,
+  	     "memo_chain", "128", CostMemoChain(),
 	     1, 65535, 1);
   //  time_range(s64_qform_costs,
   //	     "closest_23_tree_16bit", "64", CostClosest23Tree(16),
