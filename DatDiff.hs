@@ -16,6 +16,8 @@ doit args = do
                  map snd $
                  filter fst $
                  zipWith (\a b -> (a /= b, (a, b))) xs ys
+  print $ length $ filter id $ zipWith (<) as bs
+  print $ length $ filter id $ zipWith (>) as bs
   writeFile outfile1 $ unlines as
   writeFile outfile2 $ unlines bs
 

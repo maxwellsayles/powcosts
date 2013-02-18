@@ -34,6 +34,7 @@
 #include "powcosts/cost_greedy_pm1.h"
 #include "powcosts/cost_memo_chain.h"
 #include "powcosts/cost_naf.h"
+#include "powcosts/cost_pre.h"
 #include "powcosts/i_cost_exp.h"
 #include "powcosts/util.h"
 
@@ -800,6 +801,7 @@ void time_methods() {
 }
 
 void time_16bit_methods() {
+  /*
   time_range(s64_qform_costs,
 	     "add_chain", "64", CostAddChain(),
 	     1, 65535, 1);
@@ -811,6 +813,13 @@ void time_16bit_methods() {
 	     1, 65535, 1);
   time_range(s128_qform_costs,
   	     "memo_chain", "128", CostMemoChain(),
+	     1, 65535, 1);
+  */
+  time_range(s64_qform_costs,
+	     "pre", "64", CostPre(s64_pow_reps, s64_pow_rep_sizes),
+	     1, 65535, 1);
+  time_range(s128_qform_costs,
+	     "pre", "128", CostPre(s128_pow_reps, s128_pow_rep_sizes),
 	     1, 65535, 1);
   //  time_range(s64_qform_costs,
   //	     "closest_23_tree_16bit", "64", CostClosest23Tree(16),
