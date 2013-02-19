@@ -42,9 +42,18 @@ class mpz_c {
   mpz_c(const mpz_c& that) {
     mpz_init_set(z, that.z);
   }
+
+  mpz_c(mpz_c&& that) noexcept
+    : z(that.z)
+  {
+    that.z->_mp_alloc = 0;
+    that.z->_mp_size  = 0;
+    that.z->_mp_d     = nullptr;
+  }
   
   ~mpz_c() {
-    mpz_clear(z);
+    if (z->_mp_d != nullptr)
+      mpz_clear(z);
   }
 
   mpz_c& operator=(const char* x) {
@@ -64,6 +73,11 @@ class mpz_c {
 
   mpz_c& operator=(const mpz_c& that) {
     mpz_set(z, that.z);
+    return *this;
+  }
+
+  mpz_c& operator=(mpz_c&& that) noexcept {
+    std::swap(z, that.z);
     return *this;
   }
 
