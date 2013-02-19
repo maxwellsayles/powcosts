@@ -1,7 +1,11 @@
 import os
 from glob import glob
 
-env = Environment(CCFLAGS=['-O3', '-Wall', '-Werror', '-DNDEBUG', '-std=c++11'],
+# env = Environment(CCFLAGS=['-O3', '-Wall', '-Werror',
+#                            '-DNDEBUG', '-std=c++11'],
+#                   CPPPATH=['..', '/home/max/github'])
+env = Environment(CCFLAGS=['-O3', '-Wall', '-Werror',
+                           '-std=c++11'],
                   CPPPATH=['..', '/home/max/github'])
 
 ccfiles = glob('*.cc')
