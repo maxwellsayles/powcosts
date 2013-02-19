@@ -778,7 +778,6 @@ void time_methods() {
   CostDBNSChainR2L   cost_dbns_r2l;
   CostDBNSChainR2L36 cost_dbns_r2l36;
   Cost_DBNS_L2R      cost_dbns_l2r;
-  CostGreedyPM1      cost_greedy_pm1(1);
   CostGreedyPM1      cost_greedy_pm1_tree(16);
   CostClosest23Tree  cost_closest_23_tree(16);
   const fnc_desc descs[] = {
@@ -788,7 +787,6 @@ void time_methods() {
     //    {"dbns_r2l", cost_dbns_r2l},
     //    {"dbns_r2l36", cost_dbns_r2l36},
     //    {"dbns_l2r", cost_dbns_l2r},
-    //    {"greedy_pm1", cost_greedy_pm1},
     //    {"greedy_pm1_tree", cost_greedy_pm1_tree},
     //    {"closest_23_tree", cost_closest_23_tree},
   };
@@ -807,24 +805,24 @@ void time_16bit_methods() {
   /*
   // Memoized recursive chains
   time_range(s64_qform_costs,
-	     "add_chain", "64", CostAddChain(),
+	     "add_chain_65536", "64", CostAddChain(),
 	     1, 65535, 1);
   time_range(s128_qform_costs,
-  	     "add_chain", "128", CostAddChain(),
+  	     "add_chain_65536", "128", CostAddChain(),
 	     1, 65535, 1);
   time_range(s64_qform_costs,
-	     "memo_chain", "64", CostMemoChain(),
+	     "memo_chain_65536", "64", CostMemoChain(),
 	     1, 65535, 1);
   time_range(s128_qform_costs,
-  	     "memo_chain", "128", CostMemoChain(),
+  	     "memo_chain_65536", "128", CostMemoChain(),
 	     1, 65535, 1);
 
   // Incrementally searched representatioins
   time_range(s64_qform_costs,
-	     "pre", "64", CostPre(s64_pow_reps, s64_pow_rep_sizes),
+	     "pre_65536", "64", CostPre(s64_pow_reps, s64_pow_rep_sizes),
 	     1, 65535, 1);
   time_range(s128_qform_costs,
-	     "pre", "128", CostPre(s128_pow_reps, s128_pow_rep_sizes),
+	     "pre_65536", "128", CostPre(s128_pow_reps, s128_pow_rep_sizes),
 	     1, 65535, 1);
 
   // Binary and NAF
