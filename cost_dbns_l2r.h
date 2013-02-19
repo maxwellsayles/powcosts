@@ -21,6 +21,7 @@ class Cost_DBNS_L2R_Bounded : public ICostExp {
   const int max_b_;
 };
 
+/// Iterates max_a from 0 to log_2(n).
 class Cost_DBNS_L2R : public ICostExp {
  public:
   double cost(const group_cost_t& cost, const mpz_c& in_n) const override;

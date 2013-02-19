@@ -52,14 +52,16 @@ static double dbns_l2r_bounded(const group_cost_t& costs,
 static double dbns_l2r(const group_cost_t& costs, const mpz_t in_n) {
   mpz_c t;
   double best_cost = std::numeric_limits<double>::max();
-  int k = mpz_sizeinbase(in_n, 3);
+  int A = mpz_sizeinbase(in_n, 2);
+  int B = mpz_sizeinbase(in_n, 3);
   int max_a = 0;
   int max_b = 0;
 
-  while (max_b <= k) {
+  while (max_b <= B) {
     mpz_ui_pow_ui(t.z, 3, max_b);
-    mpz_tdiv_q(t.z, in_n, t.z);
+    mpz_cdiv_q(t.z, in_n, t.z);
     max_a = mpz_sizeinbase(t.z, 2);
+    if (max_a <= 9 * A / 10) break;  // Bail if max_a is not in the top 10%
 
     double cost = dbns_l2r_bounded(costs, in_n, max_a, max_b);
     if (cost < best_cost) {
@@ -79,9 +81,9 @@ static double dbns_chain_l2r_bounded(const group_cost_t& costs,
 				     const mpz_t in_n,
 				     const int in_max_a,
 				     const int in_max_b) {
-  mpz_c n(in_n);
-  mpz_c t;
-  double res = 0;
+  static mpz_c n;
+  static mpz_c approx;
+  n = in_n;
   int big_a = 0;
   int big_b = 0;
   int max_a = in_max_a;
@@ -93,29 +95,19 @@ static double dbns_chain_l2r_bounded(const group_cost_t& costs,
   mpz_set(n.z, in_n);
   while (mpz_cmpabs_ui(n.z, 1) > 0) {
     terms ++;
+    mpz_abs(n.z, n.z);
+    approx = best_db_approx(&a, &b, n.z, max_a, max_b);
+    if (a > big_a) big_a = a;
+    if (b > big_b) big_b = b;
+    mpz_sub(n.z, n.z, approx.z);
 
-    if (mpz_cmp_ui(n.z, 0) > 0) {
-      mpz_c approx = best_db_approx(&a, &b, n.z, max_a, max_b);
-      if (a > big_a) big_a = a;
-      if (b > big_b) big_b = b;
-      mpz_sub(n.z, n.z, approx.z);
-    } else {
-      mpz_abs(t.z, n.z);
-      mpz_c approx = best_db_approx(&a, &b, t.z, max_a, max_b);
-      if (a > big_a) big_a = a;
-      if (b > big_b) big_b = b;
-      mpz_add(n.z, n.z, approx.z);
-    }
     max_a = a;
     max_b = b;
   }
 
-  res += big_a * costs.square;
-  res += big_b * costs.cube;
-  if (terms > 1) {
-    res += (terms-1) * costs.compose;
-  }
-  return res;
+  return (terms - 1) * costs.compose
+         + big_a * costs.square
+         + big_b * costs.cube;
 }
 
 /**

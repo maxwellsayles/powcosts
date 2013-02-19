@@ -25,7 +25,7 @@ void append_gnuplot_datfile(const string& filename,
 }
 
 bool is_2_3_integer(const mpz_t x, int* a, int* b) {
-  mpz_c t;
+  static mpz_c t;
 
   // make sure x is not zero
   if (mpz_cmp_ui(x, 0) == 0) {
@@ -57,20 +57,20 @@ mpz_c best_db_approx(int* out_a,
 		     const mpz_t n,
 		     const int max_a,
 		     const int max_b) {
+  assert(mpz_cmp_ui(n, 0) != 0);
   if (is_2_3_integer(n, out_a, out_b)) {
     return n;
   }
 
-  mpz_c approx;
-  mpz_c best_d;
-  mpz_c d;
-  mpz_c v;
-  mpz_c tmp_v;
+  static mpz_c approx;
+  static mpz_c best_d;
+  static mpz_c d;
+  static mpz_c v;
+  static mpz_c tmp_v;
   int best_a = max_a;
   int best_b = max_b;
   int a;
   int b;
-  int tmp;
 
   mpz_set(best_d.z, n);
 
@@ -81,6 +81,7 @@ mpz_c best_db_approx(int* out_a,
   mpz_mul_2exp(v.z, v.z, a);
 
   // find largest 'b' such that 2^a3^b <= n
+  // NOTE: a <= max_a, so b might not be 0.
   b = 0;
   mpz_set(tmp_v.z, v.z);
   while (mpz_cmp(tmp_v.z, n) <= 0) {
@@ -93,13 +94,13 @@ mpz_c best_db_approx(int* out_a,
     b ++;
   }
   b --;
+  assert(b >= 0);
 
   // iterate all values of 'a'
   while (a >= 0 && b <= max_b) {
     // check 2^a*3^b
     mpz_sub(d.z, n, v.z);
-    tmp = mpz_cmpabs(d.z, best_d.z);
-    if (tmp < 0) {
+    if (mpz_cmpabs(d.z, best_d.z) < 0) {
       mpz_set(approx.z, v.z);
       mpz_set(best_d.z, d.z);
       best_a = a;
@@ -109,8 +110,7 @@ mpz_c best_db_approx(int* out_a,
     // check 2^{a+1}*3^b
     if (a+1 <= max_a) {
       mpz_sub(d.z, d.z, v.z);
-      tmp = mpz_cmpabs(d.z, best_d.z);
-      if (tmp < 0) {
+      if (mpz_cmpabs(d.z, best_d.z) < 0) {
 	mpz_mul_2exp(approx.z, v.z, 1);
 	mpz_set(best_d.z, d.z);
 	best_a = a+1;
@@ -120,6 +120,7 @@ mpz_c best_db_approx(int* out_a,
 
     // next 'a'
     a --;
+    if (a < 0) break;
     mpz_tdiv_q_2exp(v.z, v.z, 1);
 
     // find largest 'b' such that 2^a3^b <= n
@@ -133,6 +134,7 @@ mpz_c best_db_approx(int* out_a,
       b ++;
     }
     b --;
+    assert(b >= 0);
   }
 
   *out_a = best_a;
