@@ -775,8 +775,8 @@ void time_methods() {
   CostBinary         cost_binary;
   CostBlock          cost_block;
   CostNafR2L         cost_naf_r2l;
-  CostDBNSChainR2L   cost_dbns_chain_r2l;
-  CostDBNSChainR2L36 cost_dbns_chain_r2l36;
+  CostDBNSChainR2L   cost_dbns_r2l;
+  CostDBNSChainR2L36 cost_dbns_r2l36;
   Cost_DBNS_L2R      cost_dbns_l2r;
   CostGreedyPM1      cost_greedy_pm1(1);
   CostGreedyPM1      cost_greedy_pm1_tree(16);
@@ -785,8 +785,8 @@ void time_methods() {
     //    {"binary", cost_binary},
     {"block", cost_block},
     //    {"naf_r2l", cost_naf_r2l},
-    //    {"dbns_chain_r2l", cost_dbns_chain_r2l},
-    //    {"dbns_chain_r2l36", cost_dbns_chain_r2l36},
+    //    {"dbns_r2l", cost_dbns_r2l},
+    //    {"dbns_r2l36", cost_dbns_r2l36},
     //    {"dbns_l2r", cost_dbns_l2r},
     //    {"greedy_pm1", cost_greedy_pm1},
     //    {"greedy_pm1_tree", cost_greedy_pm1_tree},
@@ -805,6 +805,7 @@ void time_methods() {
 
 void time_16bit_methods() {
   /*
+  // Memoized recursive chains
   time_range(s64_qform_costs,
 	     "add_chain", "64", CostAddChain(),
 	     1, 65535, 1);
@@ -817,16 +818,67 @@ void time_16bit_methods() {
   time_range(s128_qform_costs,
   	     "memo_chain", "128", CostMemoChain(),
 	     1, 65535, 1);
-  */
+
+  // Incrementally searched representatioins
   time_range(s64_qform_costs,
 	     "pre", "64", CostPre(s64_pow_reps, s64_pow_rep_sizes),
 	     1, 65535, 1);
   time_range(s128_qform_costs,
 	     "pre", "128", CostPre(s128_pow_reps, s128_pow_rep_sizes),
 	     1, 65535, 1);
-  //  time_range(s64_qform_costs,
-  //	     "closest_23_tree_16bit", "64", CostClosest23Tree(16),
-  //	     1, 65535, 1);
+
+  // Binary and NAF
+  time_range(s64_qform_costs,
+	     "binary_65536", "64", CostBinary(),
+	     1, 65535, 1);
+  time_range(s128_qform_costs,
+	     "binary_65536", "128", CostBinary(),
+	     1, 65535, 1);
+  time_range(s64_qform_costs,
+	     "naf_r2l_65536", "64", CostNafR2L(),
+	     1, 65535, 1);
+  time_range(s128_qform_costs,
+	     "naf_r2l_65536", "128", CostNafR2L(),
+	     1, 65535, 1);
+
+  // dbns r2l
+  time_range(s64_qform_costs,
+	     "dbns_r2l_65536", "64", CostDBNSChainR2L(),
+	     1, 65535, 1);
+  time_range(s128_qform_costs,
+	     "dbns_r2l_65536", "128", CostDBNSChainR2L(),
+	     1, 65535, 1);
+  time_range(s64_qform_costs,
+	     "dbns_r2l36_65536", "64", CostDBNSChainR2L36(),
+	     1, 65535, 1);
+  time_range(s128_qform_costs,
+	     "dbns_r2l36_65536", "128", CostDBNSChainR2L36(),
+	     1, 65535, 1);
+
+  // dbns l2r
+  time_range(s64_qform_costs,
+	     "dbns_l2r_65536", "64", Cost_DBNS_L2R(),
+	     1, 65535, 1);
+  time_range(s128_qform_costs,
+	     "dbns_l2r_65536", "128", Cost_DBNS_L2R(),
+	     1, 65535, 1);
+
+  // dbns l2r tree
+  time_range(s64_qform_costs,
+	     "dbns_l2r_tree_65536", "64", CostClosest23Tree(16),
+	     1, 65535, 1);
+  time_range(s128_qform_costs,
+	     "dbns_l2r_tree_65536", "128", CostClosest23Tree(16),
+	     1, 65535, 1);
+  */
+
+  // greedy pm1
+  time_range(s64_qform_costs,
+	     "greedy_pm1_tree_65536", "64", CostGreedyPM1(16),
+	     1, 65535, 1);
+  time_range(s128_qform_costs,
+	     "greedy_pm1_tree_65536", "128", CostGreedyPM1(16),
+	     1, 65535, 1);
 }
 
 
@@ -834,8 +886,8 @@ int main(int argc, char** argv) {
   struct rlimit l = {1024ULL*1024ULL*1024ULL, 1024ULL*1024ULL*1024ULL};
   setrlimit(RLIMIT_AS, &l);
 
-  time_methods();
-  //  time_16bit_methods();
+  //  time_methods();
+  time_16bit_methods();
 
   //graph_dbns_l2r_bounds(s64_qform_costs, 1000,
   //  			dat_file("dbns_l2r_bounded", "64"));
