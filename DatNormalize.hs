@@ -7,6 +7,7 @@ import Control.Arrow
 import Control.Monad
 import System.Environment (getArgs)
 import System.FilePath.Glob (glob)
+import System.FilePath.Posix (takeBaseName)
 import Text.Printf (printf)
 
 transpose :: [[a]] -> [[a]]
@@ -46,13 +47,11 @@ doit patterns = do
   let normalize m = map (/ m)
   let out_data = transpose $ zipWith normalize mins rows
 
-  let out_names = map outfilename in_names
-  forM_ (zip out_names out_data) $ \(out_name, xs) -> do
-                  putStrLn $ "Processing " ++ show out_name
+--  let out_names = map outfilename in_names
+  forM_ (zip in_names out_data) $ \(name, xs) -> do
                   let avg = (sum xs) / (fromIntegral $ length xs)
-                  printf "Normalized Average: %.5f\n\n" avg
-                  appendFile "out.tex" $
-                             printf "%s & %0.5f \\\\\n" out_name avg
+                  printf "Normalized Average for %s: %.5f\n\n"
+                             (show $ takeBaseName name) avg
 
 --                  let xs' = map (\(x, y) -> show x ++ ", " ++ show y) $
 --                            zip [1..] xs
