@@ -50,7 +50,7 @@ doit patterns = do
 --  let out_names = map outfilename in_names
   forM_ (zip in_names out_data) $ \(name, xs) -> do
                   let avg = (sum xs) / (fromIntegral $ length xs)
-                  printf "Normalized Average for %s: %.5f\n\n"
+                  printf "Normalized Average for %s: %.5f\n"
                              (show $ takeBaseName name) avg
 
 --                  let xs' = map (\(x, y) -> show x ++ ", " ++ show y) $

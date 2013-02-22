@@ -29,10 +29,11 @@ double CostTree::cost(const group_cost_t& cost,
 				 n));
     }
 
-    // If the first element in the set has a remainder of 1,
+    // If the first element in the set has a remainder of 0 or 1,
     // then we are finished.
-    auto iter = reduced.begin();
-    if (mpz_cmp_ui(iter->remainder->z, 1) == 0) {
+    auto iter = reduced.cbegin();
+    if (mpz_cmp_ui(iter->remainder->z, 0) == 0 ||
+	mpz_cmp_ui(iter->remainder->z, 1) == 0) {
       return iter->partial_cost();
     }
 

@@ -15,13 +15,10 @@ set<PartialCost> CostPM2a3b::children(const group_cost_t& cost,
   mpz_c v2;
   mpz_c v3;
 
-  const int A = 16;
-  const int B = 16;
-
   mpz_set_ui(v2.z, 1);
-  for (int a = 0; a <= A; a++) {
+  for (int a = 0; a <= A_; a++) {
     mpz_set(v3.z, v2.z);
-    for (int b = 0; b <= B; b++) {
+    for (int b = 0; b <= B_; b++) {
       // Add 2^a * 3^b
       auto A = make_shared<mpz_c>(*part.remainder.get());
       mpz_add(A->z, A->z, v3.z);
