@@ -29,29 +29,29 @@ double CostTree::cost(const group_cost_t& cost,
 				 n));
     }
 
+    // Take the k smallest partial costs.
+    parts_t k_parts;
+    auto hint = k_parts.begin();
+    auto part = reduced.cbegin();
+    for (int i = 0; i < k_ && part != reduced.cend(); i++, ++part) {
+      hint = k_parts.insert(hint, *part);
+    }
+    assert(k_parts.size() <= static_cast<size_t>(k_));
+    
     // If the first element in the set has a remainder of 0 or 1,
     // then we are finished.
-    auto iter = reduced.cbegin();
+    auto iter = k_parts.cbegin();
     if (mpz_cmp_ui(iter->remainder->z, 0) == 0 ||
 	mpz_cmp_ui(iter->remainder->z, 1) == 0) {
       return iter->partial_cost();
     }
 
     // Generate all the children.
-    parts_t new_parts;
-    for (auto part : reduced) {
-      parts_t kids = children(cost, part);
-      new_parts.insert(kids.begin(), kids.end());
-    }
-
-    // Take the k smallest partial costs.
     parts.clear();
-    auto hint = parts.begin();
-    auto part = new_parts.cbegin();
-    for (int i = 0; i < k_ && part != new_parts.cend(); i++, ++part) {
-      hint = parts.insert(hint, *part);
+    for (auto part : k_parts) {
+      parts_t kids = children(cost, part);
+      parts.insert(kids.begin(), kids.end());
     }
-    assert(parts.size() <= static_cast<size_t>(k_));
   }
 
   assert(false);
