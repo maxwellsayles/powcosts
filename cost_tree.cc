@@ -1,7 +1,6 @@
 #include "powcosts/cost_tree.h"
 
 #include <set>
-#include <vector>
 
 #include <assert.h>
 

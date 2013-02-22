@@ -1,9 +1,6 @@
-#include "powcosts/cost_greedy_pm1.h"
+#include "powcosts/cost_pm1.h"
 
-#include <functional>
-#include <queue>
 #include <set>
-#include <vector>
 
 #include <assert.h>
 
@@ -12,8 +9,8 @@
 
 using namespace std;
 
-set<PartialCost> CostGreedyPM1::children(const group_cost_t& cost,
-					 const PartialCost& part) const {
+set<PartialCost> CostPM1::children(const group_cost_t& cost,
+				   const PartialCost& part) const {
   set<PartialCost> res;
 
   // Add 1

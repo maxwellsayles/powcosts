@@ -131,7 +131,7 @@ class mpz_c {
   
   /// this = this / 2^a where a <= max2.
   /// Return a.
-  int reduce2(int32_t max2 = std::numeric_limits<int32_t>::max()) {
+  int reduce2(int max2 = std::numeric_limits<int>::max()) {
     if (mpz_cmp_ui(z, 0) == 0) return 0;
     int res = mpz_scan1(z, 0);
     if (res > max2) res = max2;
@@ -143,7 +143,7 @@ class mpz_c {
   
   /// this = this / 3^b where b <= max3.
   /// Return b.
-  int reduce3(int32_t max3 = std::numeric_limits<int32_t>::max()) {
+  int reduce3(int max3 = std::numeric_limits<int>::max()) {
     if (mpz_cmp_ui(z, 0) == 0) return 0;
     int res = 0;
     while (mpz_mod3(z) == 0 && res < max3) {
@@ -154,11 +154,13 @@ class mpz_c {
   }
 
   // Reduce by both 2 and 3.
-  std::pair<int, int> reduce2_3() {
+  std::pair<int, int>
+      reduce2_3(int max2 = std::numeric_limits<int>::max(),
+		int max3 = std::numeric_limits<int>::max()) {
     if (mpz_cmp_ui(z, 0) == 0)
       return std::make_pair(0, 0);
-    int a = reduce2();
-    int b = reduce3();
+    int a = reduce2(max2);
+    int b = reduce3(max3);
     return std::make_pair(a, b);
   }
   
