@@ -782,12 +782,12 @@ void time_methods() {
   CostClosest23Tree  cost_closest_23_tree(16);
   const fnc_desc descs[] = {
     //    {"binary", cost_binary},
-    {"block", cost_block},
+    //    {"block", cost_block},
     //    {"naf_r2l", cost_naf_r2l},
     //    {"dbns_r2l", cost_dbns_r2l},
     //    {"dbns_r2l36", cost_dbns_r2l36},
     //    {"dbns_l2r", cost_dbns_l2r},
-    //    {"greedy_pm1_tree", cost_greedy_pm1_tree},
+    {"greedy_pm1_tree", cost_greedy_pm1_tree},
     //    {"closest_23_tree", cost_closest_23_tree},
   };
   const int desc_count = sizeof(descs) / sizeof(fnc_desc);
@@ -884,8 +884,8 @@ int main(int argc, char** argv) {
   struct rlimit l = {1024ULL*1024ULL*1024ULL, 1024ULL*1024ULL*1024ULL};
   setrlimit(RLIMIT_AS, &l);
 
-  //  time_methods();
-  time_16bit_methods();
+  time_methods();
+  //  time_16bit_methods();
 
   //graph_dbns_l2r_bounds(s64_qform_costs, 1000,
   //  			dat_file("dbns_l2r_bounded", "64"));
