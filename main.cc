@@ -30,6 +30,7 @@
 #include "powcosts/cost_memo_chain.h"
 #include "powcosts/cost_naf.h"
 #include "powcosts/cost_pm1.h"
+#include "powcosts/cost_pm2a3b.h"
 #include "powcosts/cost_pre.h"
 #include "powcosts/i_cost_exp.h"
 #include "powcosts/mpz_c.h"
@@ -130,6 +131,7 @@ void time_methods() {
   CostDBNSChainR2L36 cost_dbns_r2l36;
   Cost_DBNS_L2R      cost_dbns_l2r;
   CostPM1            cost_pm1(16);
+  CostPM2a3b         cost_pm2a3b(16);
   CostClosest23Tree  cost_closest_23_tree(16);
   const fnc_desc descs[] = {
     //    {"binary", cost_binary},
@@ -138,7 +140,8 @@ void time_methods() {
     //    {"dbns_r2l", cost_dbns_r2l},
     //    {"dbns_r2l36", cost_dbns_r2l36},
     //    {"dbns_l2r", cost_dbns_l2r},
-    {"pm1", cost_pm1},
+    //    {"pm1", cost_pm1},
+    {"pm2a3b", cost_pm2a3b},
     //    {"closest_23_tree", cost_closest_23_tree},
   };
   const int desc_count = sizeof(descs) / sizeof(fnc_desc);
@@ -220,13 +223,22 @@ void time_16bit_methods() {
 	     "dbns_l2r_tree_65536", "128", CostClosest23Tree(16),
 	     1, 65535, 1);
   */
-
+  /*
   // greedy pm1
   time_range(s64_qform_costs,
-	     "greedy_pm1_tree_65536", "64", CostPM1(16),
+	     "pm1_65536", "64", CostPM1(16),
 	     1, 65535, 1);
   time_range(s128_qform_costs,
-	     "greedy_pm1_tree_65536", "128", CostPM1(16),
+	     "pm1_65536", "128", CostPM1(16),
+	     1, 65535, 1);
+  */
+
+  // greedy +/- 2^a*3^b
+  time_range(s64_qform_costs,
+	     "pm2a3b_65536", "64", CostPM2a3b(16),
+	     1, 65535, 1);
+  time_range(s128_qform_costs,
+	     "pm2a3b_65536", "128", CostPM2a3b(16),
 	     1, 65535, 1);
 }
 
@@ -235,8 +247,8 @@ int main(int argc, char** argv) {
   struct rlimit l = {1024ULL*1024ULL*1024ULL, 1024ULL*1024ULL*1024ULL};
   setrlimit(RLIMIT_AS, &l);
 
-  time_methods();
-  //  time_16bit_methods();
+  //  time_methods();
+  time_16bit_methods();
 
   //graph_dbns_l2r_bounds(s64_qform_costs, 1000,
   //  			dat_file("dbns_l2r_bounded", "64"));
