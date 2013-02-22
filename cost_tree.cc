@@ -15,44 +15,45 @@ typedef set<PartialCost> parts_t;
 double CostTree::cost(const group_cost_t& cost,
 		      const mpz_c& in_n) const {
   parts_t parts;
-
-  // Reduce by 2 and 3.
-  // TODO: reduce before calling children on the partial.
-  mpz_c n(in_n);
-  pair<int, int> res = n.reduce2_3();
-  if (res.first != 0 || res.second != 0) {
-    // Some reduction occurred, so we have our first term.
-    parts.insert(PartialCost(cost, 1, res.first, res.second, n));
-  } else {
-    // No reduction occurred, so insert the input unchanged.
-    parts.insert(PartialCost(cost, n));
-  }
+  parts.insert(PartialCost(cost, 1, 0, 0, make_shared<mpz_c>(in_n)));
 
   while (true) {
-    parts_t new_parts;
-    assert(new_parts.size() == 0);
+    // Reduce the set of partial costs.
+    parts_t reduced;
     for (auto part : parts) {
-      // Generate the set of new candidates
-      parts_t tmp_parts = children(cost, part);
-      new_parts.insert(tmp_parts.begin(), tmp_parts.end());
+      auto n = make_shared<mpz_c>(*part.remainder.get());
+      auto res = n->reduce2_3();
+      reduced.insert(PartialCost(cost,
+				 part.terms,
+				 part.squares + res.first,
+				 part.cubes + res.second,
+				 n));
+    }
+
+    // If the first element in the set has a remainder of 1,
+    // then we are finished.
+    auto iter = reduced.begin();
+    if (mpz_cmp_ui(iter->remainder->z, 1) == 0) {
+      return iter->partial_cost();
+    }
+
+    // Generate all the children.
+    parts_t new_parts;
+    for (auto part : reduced) {
+      parts_t kids = children(cost, part);
+      new_parts.insert(kids.begin(), kids.end());
     }
 
     // Take the k smallest partial costs.
-    set<PartialCost> empty_set;
-    parts.swap(empty_set);  // This releases the memory held by the set.
+    parts.clear();
+    auto hint = parts.begin();
     auto part = new_parts.cbegin();
     for (int i = 0; i < k_ && part != new_parts.cend(); i++, ++part) {
-      parts.insert(*part);
+      hint = parts.insert(hint, *part);
     }
     assert(parts.size() <= static_cast<size_t>(k_));
-
-    // If the first element in the set has a remainder of 0,
-    // then we are finished.
-    auto iter = parts.begin();
-    if (mpz_cmp_ui(iter->remainder->z, 0) == 0) {
-      return iter->partial_cost();
-    }
   }
+
   assert(false);
   return 0;
 }

@@ -19,22 +19,21 @@ set<PartialCost> CostGreedyPM1::children(const group_cost_t& cost,
   // Add 1
   auto A = make_shared<mpz_c>(*part.remainder.get());
   mpz_add_ui(A->z, A->z, 1);
-  auto A_reduce = A->reduce2_3();
   res.insert(PartialCost(cost,
 			 part.terms + 1,
-			 part.squares + A_reduce.first,
-			 part.cubes + A_reduce.second,
+			 part.squares,
+			 part.cubes,
 			 A));
 
   // Subtract 1
   auto B = make_shared<mpz_c>(*part.remainder.get());
   mpz_sub_ui(B->z, B->z, 1);
-  auto B_reduce = B->reduce2_3();
   res.insert(PartialCost(cost,
 			 part.terms + 1,
-			 part.squares + B_reduce.first,
-			 part.cubes + B_reduce.second,
+			 part.squares,
+			 part.cubes,
 			 B));
+
   return res;
 }
 
