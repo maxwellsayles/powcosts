@@ -9,6 +9,8 @@
 
 #include <gmp.h>
 #include <stdint.h>
+#include <sys/time.h>
+#include <time.h>
 
 #include "powcosts/mpz_c.h"
 
@@ -44,6 +46,20 @@ mpz_c best_db_approx(int* out_a,
 		     const mpz_t n,
 		     const int max_a,
 		     const int max_b);
+
+/// Gives the time from system on in nanoseconds
+static inline uint64_t current_nanos(void) {
+#ifdef __linux__
+  struct timespec res;
+  clock_gettime(CLOCK_MONOTONIC_RAW, &res);
+  return (res.tv_sec * 1000000000ULL) + res.tv_nsec;
+#else
+  struct timeval tv;
+  gettimeofday(&tv, 0);
+  return ((uint64_t)tv.tv_sec * 1000000ULL + (uint64_t)tv.tv_usec) * 1000;
+#endif
+}
+
 
 #endif
 

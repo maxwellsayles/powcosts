@@ -13,7 +13,7 @@ ccfiles += ['/home/max/github/libqform/libqform.a',
             '/home/max/github/liboptarith/liboptarithxx.a']
 
 
-libs = []
+libs = ['rt']
 if os.path.isfile('/usr/local/lib/libgmp.a'):
     ccfiles += ['/usr/local/lib/libgmp.a']
 elif os.path.isfile('/usr/lib/libgmp.a'):
