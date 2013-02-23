@@ -94,10 +94,10 @@ void time_primorial_growth(const group_cost_t& costs,
     int primorial_size = mpz_sizeinbase(primorial.z, 2);
     cout << "Primorial has " << primorial_size << " bits." << endl;
 
-    // Compute time of function.
+    // Compute time of function (in millis).
     double c = cost_exp.cost(costs, primorial);
     cout << type << ": " << c << endl;
-    append_gnuplot_datfile(out_file, prime_index, c);
+    append_gnuplot_datfile(out_file, prime_index, c / 1000000);
     cout << endl;
   }
   free(primes);
