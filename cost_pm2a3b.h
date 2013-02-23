@@ -23,12 +23,11 @@ class CostPM2a3b : public CostTree {
   {
   }
 
-  static void graph_bounds(const group_cost_t& costs,
-			   const int primorial_index,
-			   const std::string& filename,
-			   const int k,
-			   const int sample_points);
-
+  static void vary_max_bounds(const group_cost_t& costs,
+			      const int primorial_index,
+			      const std::string& filename,
+			      const int k,
+			      const int sample_points);
   
  protected:
   std::set<PartialCost> children(const group_cost_t& cost,

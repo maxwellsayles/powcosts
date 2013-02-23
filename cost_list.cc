@@ -1,4 +1,4 @@
-#include "powcosts/cost_block.h"
+#include "powcosts/cost_list.h"
 
 #include <assert.h>
 
@@ -9,8 +9,8 @@ extern "C" {
 #include "libqform/s64_qform.h"
 }
 
-double CostBlock::cost_u16(const group_cost_t& cost,
-			   const uint16_t n) const {
+double CostList::cost_u16(const group_cost_t& cost,
+			  const uint16_t n) const {
   const factored_two_three_term16_t* const* rep_terms;
   const int* rep_sizes;
   if (&cost == &s64_qform_costs) {
@@ -20,7 +20,7 @@ double CostBlock::cost_u16(const group_cost_t& cost,
     rep_terms = s128_pow_reps;
     rep_sizes = s128_pow_rep_sizes;
   } else {
-    printf("Unrecognized group costs.\n");
+    printf("Unrecognized costs.\n");
     exit(-1);
   }
   int a = 0;
@@ -35,15 +35,22 @@ double CostBlock::cost_u16(const group_cost_t& cost,
   return (j - 1) * cost.compose + a * cost.square + b * cost.cube;
 }
 
-double CostBlock::cost(const group_cost_t& cost,
-		       const mpz_c& in_n) const {
-  int limbs = abs(in_n.z->_mp_size);
-  const uint16_t* p = reinterpret_cast<const uint16_t*>(in_n.z->_mp_d);
-  p += limbs * (GMP_LIMB_BITS / 16) - 1;
+double CostList::cost(const group_cost_t& cost,
+		      const mpz_c& in_n) const {
+  mpz_c n(in_n);
+  int d = 2;
   double res = 0;
-  while (p >= reinterpret_cast<const uint16_t*>(in_n.z->_mp_d)) {
-    res += cost_u16(cost, *p);
-    p--;
+  while (mpz_cmp_ui(n.z, 1) != 0) {
+    if (mpz_divisible_ui_p(n.z, d)) {
+      res += cost_u16(cost, d);
+      mpz_divexact_ui(n.z, n.z, d);
+    } else {
+      d++;
+      if (d >= std::numeric_limits<uint16_t>::max()) {
+	printf("CostList::cost - input exponent has prime divisor larger than 16-bits!\n");
+	exit(-1);
+      }
+    }
   }
   return res;
 }

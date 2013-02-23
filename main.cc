@@ -27,6 +27,7 @@
 #include "powcosts/cost_closest_23_tree.h"
 #include "powcosts/cost_dbns_chain_r2l.h"
 #include "powcosts/cost_dbns_l2r.h"
+#include "powcosts/cost_list.h"
 #include "powcosts/cost_memo_chain.h"
 #include "powcosts/cost_naf.h"
 #include "powcosts/cost_pm1.h"
@@ -134,10 +135,11 @@ struct fnc_desc {
 void time_methods() {
   CostBinary         cost_binary;
   CostBlock          cost_block;
-  CostNafR2L         cost_naf_r2l;
   CostDBNSChainR2L   cost_dbns_r2l;
   CostDBNSChainR2L36 cost_dbns_r2l36;
-  Cost_DBNS_L2R      cost_dbns_l2r;
+  Cost_DBNS_L2R      cost_dbns_l2r(16);
+  CostList           cost_list;
+  CostNafR2L         cost_naf_r2l;
   CostPM1            cost_pm1(16);
   CostPM2a3b         cost_pm2a3b(4, 4, 4);
   CostPM2aPM3b       cost_pm2apm3b(4, 4, 4);
@@ -145,13 +147,14 @@ void time_methods() {
   const fnc_desc descs[] = {
     //    {"binary", cost_binary},
     //    {"block", cost_block},
-    //    {"naf_r2l", cost_naf_r2l},
     //    {"dbns_r2l", cost_dbns_r2l},
     //    {"dbns_r2l36", cost_dbns_r2l36},
     //    {"dbns_l2r", cost_dbns_l2r},
-    {"pm1", cost_pm1},
-    {"pm2a3b", cost_pm2a3b},
-    {"pm2apm3b", cost_pm2apm3b},
+    {"list", cost_list},
+    //    {"naf_r2l", cost_naf_r2l},
+    //    {"pm1", cost_pm1},
+    //    {"pm2a3b", cost_pm2a3b},
+    //    {"pm2apm3b", cost_pm2apm3b},
     //    {"closest_23_tree", cost_closest_23_tree},
   };
   const int desc_count = sizeof(descs) / sizeof(fnc_desc);
@@ -264,21 +267,21 @@ int main(int argc, char** argv) {
   struct rlimit l = {1024ULL*1024ULL*1024ULL, 1024ULL*1024ULL*1024ULL};
   setrlimit(RLIMIT_AS, &l);
 
-  //  time_methods();
+  time_methods();
   //  time_16bit_methods();
 
   /*
-  Cost_DBNS_L2R::graph_bounds(s64_qform_costs, 1000,
-			      datbound_file("dbns_l2r_bounded", "64"));
-  Cost_DBNS_L2R::graph_bounds(s128_qform_costs, 1000,
-			      datbound_file("dbns_l2r_bounded", "128"));
+  Cost_DBNS_L2R::vary_max_bounds(s64_qform_costs, 1000,
+				 datbound_file("dbns_l2r_vary_max", "64"));
+  Cost_DBNS_L2R::vary_max_bounds(s128_qform_costs, 1000,
+				 datbound_file("dbns_l2r_vary_max", "128"));
   */
-
-  CostPM2a3b::graph_bounds(s64_qform_costs, 1000,
-			   datbound_file("pm2a3b_bounded", "64"), 4, 32);
-  CostPM2a3b::graph_bounds(s128_qform_costs, 1000,
-			   datbound_file("pm2a3b_bounded", "128"), 4, 32);
-
+  /*
+  CostPM2a3b::vary_max_bounds(s64_qform_costs, 1000,
+			      datbound_file("pm2a3b_vary_max", "64"), 4, 32);
+  CostPM2a3b::vary_max_bounds(s128_qform_costs, 1000,
+			     datbound_file("pm2a3b_vary_max", "128"), 4, 32);
+  */
   return 0;
 }
 

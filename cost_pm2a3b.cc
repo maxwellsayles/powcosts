@@ -50,11 +50,11 @@ set<PartialCost> CostPM2a3b::children(const group_cost_t& cost,
   return res;
 }
 
-void CostPM2a3b::graph_bounds(const group_cost_t& costs,
-			      const int primorial_index,
-			      const std::string& filename,
-			      const int k,
-			      const int sample_points) {
+void CostPM2a3b::vary_max_bounds(const group_cost_t& costs,
+				 const int primorial_index,
+				 const std::string& filename,
+				 const int k,
+				 const int sample_points) {
   remove(filename.c_str());
 
   mpz_c primorial;

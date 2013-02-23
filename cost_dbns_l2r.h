@@ -24,11 +24,19 @@ class Cost_DBNS_L2R_Bounded : public ICostExp {
 /// Iterates max_a from 0 to log_2(n).
 class Cost_DBNS_L2R : public ICostExp {
  public:
+  Cost_DBNS_L2R(const int sample_points)
+    : sample_points_(sample_points)
+  {
+  }
+
   double cost(const group_cost_t& cost, const mpz_c& in_n) const override;
 
-  static void graph_bounds(const group_cost_t& cost,
-			   const int primorial,
-			   const std::string& filename);
+  static void vary_max_bounds(const group_cost_t& cost,
+			      const int primorial,
+			      const std::string& filename);
+
+ private:
+  const int sample_points_;
 };
 
 #endif

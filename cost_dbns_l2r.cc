@@ -7,6 +7,7 @@
 #include <stdio.h>
 
 extern "C" {
+#include "liboptarith/math32.h"
 #include "liboptarith/primorial.h"
 }
 
@@ -46,22 +47,23 @@ static double dbns_l2r_bounded(const group_cost_t& costs,
 
 /**
  * Exponentiates using a DB-representation from left-to-right
- * Timing tests show that the high 10% of 'max_a' seems to be sufficient
- * given our costs on quadratic forms.
+ * Timing tests show that the low 10% of 'max_b' seems to be sufficient.
  */
-static double dbns_l2r(const group_cost_t& costs, const mpz_t in_n) {
+static double dbns_l2r(const group_cost_t& costs,
+		       const mpz_t in_n,
+		       const int sample_points) {
   mpz_c t;
   double best_cost = std::numeric_limits<double>::max();
-  int A = mpz_sizeinbase(in_n, 2);
   int B = mpz_sizeinbase(in_n, 3);
   int max_a = 0;
   int max_b = 0;
 
-  while (max_b <= B) {
+  for (int i = 0; i <= sample_points; i++) {
+    // Compute bounds on squares and cubes.
+    max_b = (i * B) / (sample_points * 10);
     mpz_ui_pow_ui(t.z, 3, max_b);
     mpz_cdiv_q(t.z, in_n, t.z);
     max_a = mpz_sizeinbase(t.z, 2);
-    if (max_a <= 9 * A / 10) break;  // Bail if max_a is not in the top 10%
 
     double cost = dbns_l2r_bounded(costs, in_n, max_a, max_b);
     if (cost < best_cost) {
@@ -74,68 +76,6 @@ static double dbns_l2r(const group_cost_t& costs, const mpz_t in_n) {
   return best_cost;
 }
 
-/**
- * Exponentiates using a DB-representation from left-to-right
- */
-static double dbns_chain_l2r_bounded(const group_cost_t& costs,
-				     const mpz_t in_n,
-				     const int in_max_a,
-				     const int in_max_b) {
-  static mpz_c n;
-  static mpz_c approx;
-  n = in_n;
-  int big_a = 0;
-  int big_b = 0;
-  int max_a = in_max_a;
-  int max_b = in_max_b;
-  int a;
-  int b;
-  int terms = 0;
-
-  mpz_set(n.z, in_n);
-  while (mpz_cmpabs_ui(n.z, 1) > 0) {
-    terms ++;
-    mpz_abs(n.z, n.z);
-    approx = best_db_approx(&a, &b, n.z, max_a, max_b);
-    if (a > big_a) big_a = a;
-    if (b > big_b) big_b = b;
-    mpz_sub(n.z, n.z, approx.z);
-
-    max_a = a;
-    max_b = b;
-  }
-
-  return (terms - 1) * costs.compose
-         + big_a * costs.square
-         + big_b * costs.cube;
-}
-
-/**
- * Exponentiates using a DB-representation from left-to-right
- * Timing tests show that the high 10% of 'max_a' seems to be sufficient
- * given our costs on quadratic forms.
- */
-double dbns_chain_l2r(const group_cost_t& costs, const mpz_t in_n) {
-  mpz_c t;
-  double best_cost = std::numeric_limits<double>::max();
-  int k = mpz_sizeinbase(in_n, 2);
-  int max_a = 9*k/10;
-  int max_b;
-
-  while (max_a <= k) {
-    mpz_tdiv_q_2exp(t.z, in_n, max_a);
-    max_b = mpz_sizeinbase(t.z, 3);
-
-    double cost = dbns_chain_l2r_bounded(costs, in_n, max_a, max_b);
-    if (cost < best_cost) best_cost = cost;
-
-    max_a ++;
-  }
-
-  return best_cost;
-}
-
-
 double Cost_DBNS_L2R_Bounded::cost(const group_cost_t& cost,
 				   const mpz_c& in_n) const {
   return dbns_l2r_bounded(cost, in_n.z, max_a_, max_b_);
@@ -143,12 +83,12 @@ double Cost_DBNS_L2R_Bounded::cost(const group_cost_t& cost,
 
 double Cost_DBNS_L2R::cost(const group_cost_t& cost,
 			   const mpz_c& in_n) const {
-  return dbns_l2r(cost, in_n.z);
+  return dbns_l2r(cost, in_n.z, sample_points_);
 }
 
-void Cost_DBNS_L2R::graph_bounds(const group_cost_t& costs,
-				 const int primorial_index,
-				 const std::string& filename) {
+void Cost_DBNS_L2R::vary_max_bounds(const group_cost_t& costs,
+				    const int primorial_index,
+				    const std::string& filename) {
   const int sample_points = 200;
   remove(filename.c_str());
 
