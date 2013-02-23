@@ -99,14 +99,14 @@ plot "block-128.dat" with lines title "16-bit Blocks", \
 # winners
 set output 'winners-64.eps'
 set title 'Best Performers (59-bit Discriminants)'
-plot "block-64.dat" with lines title "16-bit Blocks", \
+plot "list-64.dat" with lines title "Prime Factorization", \
      "naf_r2l-64.dat" with lines title "R2L NAF", \
      "dbns_r2l36-64.dat" with lines title "2^23^3 Windowed R2L 2,3 Chains", \
      "dbns_l2r_tree-64.dat" with lines title "4 Best ||x|-2^a3^b|", \
      "pm2a3b-64.dat" with lines title "4 Best (x±2^a3^b)/(2^c3^d)"
 set output 'winners-128.eps'
 set title 'Best Performers (118-bit Discriminants)'
-plot "block-128.dat" with lines title "16-bit Blocks", \
+plot "list-128.dat" with lines title "Prime Factorization", \
      "naf_r2l-128.dat" with lines title "R2L NAF", \
      "dbns_r2l36-128.dat" with lines title "2^23^3 Windowed R2L 2,3 Chains", \
      "dbns_l2r_tree-128.dat" with lines title "4 Best ||x|-2^a3^b|", \

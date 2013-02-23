@@ -146,11 +146,11 @@ void time_methods() {
   CostClosest23Tree  cost_closest_23_tree(16);
   const fnc_desc descs[] = {
     //    {"binary", cost_binary},
-    //    {"block", cost_block},
+    {"block", cost_block},
     //    {"dbns_r2l", cost_dbns_r2l},
     //    {"dbns_r2l36", cost_dbns_r2l36},
     //    {"dbns_l2r", cost_dbns_l2r},
-    {"list", cost_list},
+    //    {"list", cost_list},
     //    {"naf_r2l", cost_naf_r2l},
     //    {"pm1", cost_pm1},
     //    {"pm2a3b", cost_pm2a3b},

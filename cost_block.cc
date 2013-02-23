@@ -44,6 +44,10 @@ double CostBlock::cost(const group_cost_t& cost,
   while (p >= reinterpret_cast<const uint16_t*>(in_n.z->_mp_d)) {
     res += cost_u16(cost, *p);
     p--;
+    if (p >= reinterpret_cast<const uint16_t*>(in_n.z->_mp_d)) {
+      res += cost.compose;
+      res += cost.square * 16;
+    }
   }
   return res;
 }
