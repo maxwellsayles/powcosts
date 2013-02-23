@@ -4,6 +4,10 @@
 
 #include <assert.h>
 
+extern "C" {
+#include "liboptarith/primorial.h"
+}
+
 #include "powcosts/partial_cost.h"
 #include "powcosts/util.h"
 
@@ -46,3 +50,27 @@ set<PartialCost> CostPM2a3b::children(const group_cost_t& cost,
   return res;
 }
 
+void CostPM2a3b::graph_bounds(const group_cost_t& costs,
+			      const int primorial_index,
+			      const std::string& filename,
+			      const int k,
+			      const int sample_points) {
+  remove(filename.c_str());
+
+  mpz_c primorial;
+  mpz_c tmp;
+
+  mpz_primorial(primorial.z, primorial_index);
+  const int bits = mpz_sizeinbase(primorial.z, 2);
+  cout << "Primorial has " << bits << " bits." << endl;
+
+  cout << setprecision(5) << fixed;
+  for (int i = 0; i <= sample_points; i++) {
+    cout << "bound=" << i << flush;
+    CostPM2a3b cost_exp(k, i, i);
+    double cost = cost_exp.cost(costs, primorial.z);
+    cout << " cost=" << cost << endl;
+    // Write out cost in millis.
+    append_gnuplot_datfile(filename, i, cost / 1000000);
+  }
+}

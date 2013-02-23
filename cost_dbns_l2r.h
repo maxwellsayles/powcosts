@@ -25,11 +25,11 @@ class Cost_DBNS_L2R_Bounded : public ICostExp {
 class Cost_DBNS_L2R : public ICostExp {
  public:
   double cost(const group_cost_t& cost, const mpz_c& in_n) const override;
-};
 
-void graph_dbns_l2r_bounds(const group_cost_t& cost,
-			   int primorial,
+  static void graph_bounds(const group_cost_t& cost,
+			   const int primorial,
 			   const std::string& filename);
+};
 
 #endif
 

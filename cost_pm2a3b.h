@@ -7,6 +7,7 @@
 #define COST_PM2A3B_H_
 
 #include <set>
+#include <string>
 
 #include <gmp.h>
 
@@ -21,6 +22,13 @@ class CostPM2a3b : public CostTree {
     , B_(B)
   {
   }
+
+  static void graph_bounds(const group_cost_t& costs,
+			   const int primorial_index,
+			   const std::string& filename,
+			   const int k,
+			   const int sample_points);
+
   
  protected:
   std::set<PartialCost> children(const group_cost_t& cost,

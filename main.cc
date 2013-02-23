@@ -64,6 +64,10 @@ string dat16bit_file(const string& type, const string& ext) {
   return "dat-65536/" + type + "-" + ext + ".dat";
 }
 
+string datbound_file(const string& type, const string& ext) {
+  return "dat-bound/" + type + "-" + ext + ".dat";
+}
+
 void time_primorial_growth(const group_cost_t& costs,
 			   const string& type,
 			   const string& ext,
@@ -260,34 +264,21 @@ int main(int argc, char** argv) {
   struct rlimit l = {1024ULL*1024ULL*1024ULL, 1024ULL*1024ULL*1024ULL};
   setrlimit(RLIMIT_AS, &l);
 
-  time_methods();
+  //  time_methods();
   //  time_16bit_methods();
 
-  //graph_dbns_l2r_bounds(s64_qform_costs, 1000,
-  //  			dat_file("dbns_l2r_bounded", "64"));
-  //graph_dbns_l2r_bounds(s128_qform_costs, 1000,
-  //                    dat_file("dbns_l2r_bounded", "128"));
-
   /*
-  for (prime_count = 100; prime_count <= 5000; prime_count += 100) {
-    prime_step = prime_count;
-    cost_to_mask.clear();
-    cout << setprecision(5) << fixed;
-    for (dbns_mask = 0; dbns_mask < 4096; dbns_mask++) {
-      time_primorial_growth(s64_qform_costs,
-			    s64_pow_reps, s64_pow_rep_sizes,
-			    "out", "64", &cost_weird_dbns);
-    }
-    //    auto iter = cost_to_mask.begin();
-    //    for (int i = 0; i < 100; i++) {
-    //      cout << "mask=" << iter->second << " cost=" << iter->first << endl;
-    //      iter++;
-    //    }
-    auto iter = cost_to_mask.begin();
-    cout << "count=" << prime_count << ' '
-	 << "mask=" << iter->second << endl;
-  }
+  Cost_DBNS_L2R::graph_bounds(s64_qform_costs, 1000,
+			      datbound_file("dbns_l2r_bounded", "64"));
+  Cost_DBNS_L2R::graph_bounds(s128_qform_costs, 1000,
+			      datbound_file("dbns_l2r_bounded", "128"));
   */
+
+  CostPM2a3b::graph_bounds(s64_qform_costs, 1000,
+			   datbound_file("pm2a3b_bounded", "64"), 4, 32);
+  CostPM2a3b::graph_bounds(s128_qform_costs, 1000,
+			   datbound_file("pm2a3b_bounded", "128"), 4, 32);
+
   return 0;
 }
 

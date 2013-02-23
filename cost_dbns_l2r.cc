@@ -146,9 +146,9 @@ double Cost_DBNS_L2R::cost(const group_cost_t& cost,
   return dbns_l2r(cost, in_n.z);
 }
 
-void graph_dbns_l2r_bounds(const group_cost_t& costs,
-			   int primorial_index,
-			   const std::string& filename) {
+void Cost_DBNS_L2R::graph_bounds(const group_cost_t& costs,
+				 const int primorial_index,
+				 const std::string& filename) {
   const int sample_points = 200;
   remove(filename.c_str());
 
