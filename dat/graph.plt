@@ -52,24 +52,24 @@ set xrange [*:*]
 
 # +/- variants
 set output 'pm_variants-64.eps'
-plot "pm1-64.dat" with lines title "(x±1)/2^c3^d", \
-     "pm2a3b-64.dat" with lines title "(x±2^a3^b)/2^c3^d", \
-     "pm2apm3b-64.dat" with lines title "(x±2^a±3^b)/2^c3^d"
+plot "pm1-64.dat" with lines title "(x±1)/(2^c3^d)", \
+     "pm2a3b-64.dat" with lines title "(x±2^a3^b)/(2^c3^d)", \
+     "pm2apm3b-64.dat" with lines title "(x±2^a±3^b)/(2^c3^d)"
 set xrange [2000:*]
 set output 'pm_variants-64-zoom.eps'
-plot "pm1-64.dat" with lines title "(x±1)/2^c3^d", \
-     "pm2a3b-64.dat" with lines title "(x±2^a3^b)/2^c3^d", \
-     "pm2apm3b-64.dat" with lines title "(x±2^a±3^b)/2^c3^d"
+plot "pm1-64.dat" with lines title "(x±1)/(2^c3^d)", \
+     "pm2a3b-64.dat" with lines title "(x±2^a3^b)/(2^c3^d)", \
+     "pm2apm3b-64.dat" with lines title "(x±2^a±3^b)/(2^c3^d)"
 set xrange [*:*]
 set output 'pm_variants-128.eps'
-plot "pm1-128.dat" with lines title "(x±1)/2^c3^d", \
-     "pm2a3b-128.dat" with lines title "(x±2^a3^b)/2^c3^d", \
-     "pm2apm3b-128.dat" with lines title "(x±2^a±3^b)/2^c3^d"
+plot "pm1-128.dat" with lines title "(x±1)/(2^c3^d)", \
+     "pm2a3b-128.dat" with lines title "(x±2^a3^b)/(2^c3^d)", \
+     "pm2apm3b-128.dat" with lines title "(x±2^a±3^b)/(2^c3^d)"
 set xrange [2000:*]
 set output 'pm_variants-128-zoom.eps'
-plot "pm1-128.dat" with lines title "(x±1)/2^c3^d", \
-     "pm2a3b-128.dat" with lines title "(x±2^a3^b)/2^c3^d", \
-     "pm2apm3b-128.dat" with lines title "(x±2^a±3^b)/2^c3^d"
+plot "pm1-128.dat" with lines title "(x±1)/(2^c3^d)", \
+     "pm2a3b-128.dat" with lines title "(x±2^a3^b)/(2^c3^d)", \
+     "pm2apm3b-128.dat" with lines title "(x±2^a±3^b)/(2^c3^d)"
 set xrange [*:*]
 
 # block vs list
