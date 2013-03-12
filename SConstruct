@@ -3,14 +3,14 @@ from glob import glob
 
 # env = Environment(CCFLAGS=['-O3', '-Wall', '-Werror',
 #                            '-DNDEBUG', '-std=c++11'],
-#                   CPPPATH=['..', '/home/max/github'])
+#                   CPPPATH=['..'])
 env = Environment(CCFLAGS=['-O3', '-Wall', '-Werror',
                            '-std=c++11'],
-                  CPPPATH=['..', '/home/max/github'])
+                  CPPPATH=['..'])
 
 ccfiles = glob('*.cc')
-ccfiles += ['/home/max/github/libqform/libqform.a',
-            '/home/max/github/liboptarith/liboptarithxx.a']
+ccfiles += ['../libqform/libqform.a',
+            '../liboptarith/liboptarithxx.a']
 
 
 libs = ['rt']
