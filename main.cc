@@ -277,6 +277,16 @@ int main(int argc, char** argv) {
   CostPM2aPM3b::vary_max_bounds(s128_qform_costs, 1000,
 			     datbound_file("pm2apm3b_vary_max", "128"), 4, 32);
   */
+  /*
+  CostClosest23Tree::vary_max_leaves(
+      s64_qform_costs, 100,
+      datbound_file("dbns_l2r_tree_vary", "64"),
+      200, 1);
+  CostClosest23Tree::vary_max_leaves(
+      s128_qform_costs, 100,
+      datbound_file("dbns_l2r_tree_vary", "128"),
+      200, 1);
+  */
   return 0;
 }
 
