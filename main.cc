@@ -93,7 +93,7 @@ void time_primorial_growth(const group_cost_t& costs,
     // Compute time of function (in millis).
     double c = cost_exp.cost(costs, primorial);
     cout << type << ": " << c << endl;
-    append_gnuplot_datfile(out_file, prime_index, c / 1000000);
+    append_gnuplot_datfile(out_file, prime_index + 1, c / 1000000);
     cout << endl;
   }
 }
@@ -262,7 +262,7 @@ int main(int argc, char** argv) {
   struct rlimit l = {1024ULL*1024ULL*1024ULL, 1024ULL*1024ULL*1024ULL};
   setrlimit(RLIMIT_AS, &l);
 
-  //  time_methods();
+  time_methods();
   //  time_16bit_methods();
 
   /*
@@ -271,12 +271,12 @@ int main(int argc, char** argv) {
   Cost_DBNS_L2R::vary_max_bounds(s128_qform_costs, 1000,
 				 datbound_file("dbns_l2r_vary_max", "128"));
   */
-
+  /*
   CostPM2aPM3b::vary_max_bounds(s64_qform_costs, 1000,
 			      datbound_file("pm2apm3b_vary_max", "64"), 4, 32);
   CostPM2aPM3b::vary_max_bounds(s128_qform_costs, 1000,
 			     datbound_file("pm2apm3b_vary_max", "128"), 4, 32);
-
+  */
   return 0;
 }
 
