@@ -54,7 +54,7 @@ extern "C" {
 
 using namespace std;
 
-const int prime_count = 2500;
+const int prime_count = 1000;
 const int prime_step  = prime_count/100;
 
 string dat_file(const string& type, const string& ext) {
@@ -74,25 +74,21 @@ void time_primorial_growth(const group_cost_t& costs,
 			   const string& ext,
 			   const ICostExp& cost_exp) {
   cout << setprecision(5) << fixed;
-  uint32_t* primes = first_n_primes(prime_count);
-  primes[0] = 1;  // We only want odd primes.
   mpz_c primorial(1);
-  int prime_index = 0;
   const string out_file = dat_file(type, ext);
   remove(out_file.c_str());
 
-  while (prime_index < prime_count) {
-    // Multiply in the next prime.
-    for (int i = prime_step;
-	 i > 0 && prime_index < prime_count;
-	 i--, prime_index++) {
-      mpz_mul_ui(primorial.z, primorial.z, primes[prime_index]);
-    }
+  for (int prime_index = 0;
+       prime_index < prime_count;
+       prime_index += prime_step) {
+    // Compute the power primorial
+    mpz_power_primorial(primorial.z, prime_index + 1,
+			prime_list[prime_index] * prime_list[prime_index]);
 
-    cout << "Using the first " << prime_index
-         << " odd primes on a " << ext << "-bit discriminant." << endl;
+    cout << "Using P_" << prime_index
+         << " on a " << ext << "-bit discriminant." << endl;
     int primorial_size = mpz_sizeinbase(primorial.z, 2);
-    cout << "Primorial has " << primorial_size << " bits." << endl;
+    cout << "Power primorial has " << primorial_size << " bits." << endl;
 
     // Compute time of function (in millis).
     double c = cost_exp.cost(costs, primorial);
@@ -100,7 +96,6 @@ void time_primorial_growth(const group_cost_t& costs,
     append_gnuplot_datfile(out_file, prime_index, c / 1000000);
     cout << endl;
   }
-  free(primes);
 }
 
 /// Time exponentiation in the range [min_value, max_value] inclusive.
@@ -145,17 +140,17 @@ void time_methods() {
   CostPM2aPM3b       cost_pm2apm3b(4, 4, 4);
   CostClosest23Tree  cost_closest_23_tree(16);
   const fnc_desc descs[] = {
-    //    {"binary", cost_binary},
+    {"binary", cost_binary},
     {"block", cost_block},
-    //    {"dbns_r2l", cost_dbns_r2l},
-    //    {"dbns_r2l36", cost_dbns_r2l36},
-    //    {"dbns_l2r", cost_dbns_l2r},
-    //    {"list", cost_list},
-    //    {"naf_r2l", cost_naf_r2l},
-    //    {"pm1", cost_pm1},
-    //    {"pm2a3b", cost_pm2a3b},
-    //    {"pm2apm3b", cost_pm2apm3b},
-    //    {"closest_23_tree", cost_closest_23_tree},
+    {"dbns_r2l", cost_dbns_r2l},
+    {"dbns_r2l36", cost_dbns_r2l36},
+    {"dbns_l2r", cost_dbns_l2r},
+    {"list", cost_list},
+    {"naf_r2l", cost_naf_r2l},
+    {"pm1", cost_pm1},
+    {"pm2a3b", cost_pm2a3b},
+    {"pm2apm3b", cost_pm2apm3b},
+    {"dbns_l2r_tree", cost_closest_23_tree},
   };
   const int desc_count = sizeof(descs) / sizeof(fnc_desc);
 
@@ -267,7 +262,7 @@ int main(int argc, char** argv) {
   struct rlimit l = {1024ULL*1024ULL*1024ULL, 1024ULL*1024ULL*1024ULL};
   setrlimit(RLIMIT_AS, &l);
 
-  time_methods();
+  //  time_methods();
   //  time_16bit_methods();
 
   /*
@@ -276,12 +271,12 @@ int main(int argc, char** argv) {
   Cost_DBNS_L2R::vary_max_bounds(s128_qform_costs, 1000,
 				 datbound_file("dbns_l2r_vary_max", "128"));
   */
-  /*
-  CostPM2a3b::vary_max_bounds(s64_qform_costs, 1000,
-			      datbound_file("pm2a3b_vary_max", "64"), 4, 32);
-  CostPM2a3b::vary_max_bounds(s128_qform_costs, 1000,
-			     datbound_file("pm2a3b_vary_max", "128"), 4, 32);
-  */
+
+  CostPM2aPM3b::vary_max_bounds(s64_qform_costs, 1000,
+			      datbound_file("pm2apm3b_vary_max", "64"), 4, 32);
+  CostPM2aPM3b::vary_max_bounds(s128_qform_costs, 1000,
+			     datbound_file("pm2apm3b_vary_max", "128"), 4, 32);
+
   return 0;
 }
 
