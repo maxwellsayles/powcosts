@@ -1,3 +1,5 @@
+# Graphing these 16-bit timings are very noisy, and only
+# graphing every 256-or-so biases the sample set.
 
 set terminal eps
 set key left
