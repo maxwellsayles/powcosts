@@ -45,8 +45,7 @@ doit patterns = do
 
 usage = do
   putStrLn "Usage: DatMinimum.hs file1.dat file2.dat ..."
-  putStrLn "  This creates file1_sub.dat file2_sub.dat ..."
-  putStrLn "  Each line output will be unique from every file."
+  putStrLn "  Outputs the number of times each file contains a minimum."
   putStrLn ""
                          
 main = do
