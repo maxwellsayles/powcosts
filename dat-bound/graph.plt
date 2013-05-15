@@ -25,7 +25,6 @@ plot "pm2a3b_vary_max-128.dat" with lines title 'Pruned Tree (x±2^a3^b)/(2^c3^d
 
 
 # Graph the time when we grow the number of leaves
-set grid
 set xrange [1:160]
 set xlabel 'Best L Approximations'
 set output 'dbns_l2r_tree_vary-64.eps'
