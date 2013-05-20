@@ -44,6 +44,8 @@ extern "C" {
 #include "liboptarith/math32.h"
 #include "liboptarith/primes.h"
 #include "liboptarith/primorial.h"
+#include "libqform/costs_64.h"
+#include "libqform/costs_128.h"
 #include "libqform/dbreps/mpz_pow_reps.h"
 #include "libqform/dbreps/s128_pow_reps.h"
 #include "libqform/dbreps/s64_pow_reps.h"
@@ -56,6 +58,13 @@ using namespace std;
 
 const int prime_count = 1000;
 const int prime_step  = prime_count/100;
+
+string dat_defence_file(const string& type,
+			const int bits) {
+  stringstream ss;
+  ss << "dat-defence/" << type << '-' << bits << ".dat";
+  return ss.str();
+}
 
 string dat_file(const string& type, const string& ext) {
   return "dat/" + type + "-" + ext + ".dat";
@@ -71,11 +80,11 @@ string datbound_file(const string& type, const string& ext) {
 
 void time_primorial_growth(const group_cost_t& costs,
 			   const string& type,
-			   const string& ext,
+			   const int bits,
+			   const string& out_file,
 			   const ICostExp& cost_exp) {
   cout << setprecision(5) << fixed;
   mpz_c primorial(1);
-  const string out_file = dat_file(type, ext);
   remove(out_file.c_str());
 
   for (int prime_index = 0;
@@ -86,7 +95,7 @@ void time_primorial_growth(const group_cost_t& costs,
 			prime_list[prime_index] * prime_list[prime_index]);
 
     cout << "Using P_" << prime_index
-         << " on a " << ext << "-bit discriminant." << endl;
+         << " on a " << bits << "-bit discriminant." << endl;
     int primorial_size = mpz_sizeinbase(primorial.z, 2);
     cout << "Power primorial has " << primorial_size << " bits." << endl;
 
@@ -127,6 +136,39 @@ struct fnc_desc {
   const ICostExp& cost_exp;
 };
 
+void time_defence() {
+  CostBinary         cost_binary;
+  CostNafR2L         cost_naf_r2l;
+  Cost_DBNS_L2R      cost_dbns_l2r(16);
+  CostPM2a3b         cost_pm2a3b(4, 4, 4);
+  CostClosest23Tree  cost_closest_23_tree(4);
+  const fnc_desc descs[] = {
+    {"binary", cost_binary},
+    {"naf_r2l", cost_naf_r2l},
+    {"dbns_l2r", cost_dbns_l2r},
+    {"pm2a3b", cost_pm2a3b},
+    {"dbns_l2r_tree", cost_closest_23_tree},
+  };
+  const int desc_count = sizeof(descs) / sizeof(fnc_desc);
+
+  for (int bits = 16; bits <= s128_qform_group_max_bits; bits += 16) {
+    for (int i = 0; i < desc_count; i++) {
+      const fnc_desc& desc = descs[i];
+      if (bits <= s64_qform_group_max_bits) {
+	string outfile = dat_defence_file(desc.type, bits);
+	time_primorial_growth(s64_qform_all_costs[bits-16],
+			      desc.type, bits,
+			      outfile, desc.cost_exp);
+      } else {
+	string outfile = dat_defence_file(desc.type, bits);
+	time_primorial_growth(s128_qform_all_costs[bits-16],
+			      desc.type, bits,
+			      outfile, desc.cost_exp);
+      }
+    }
+  }
+}
+
 void time_methods() {
   CostBinary         cost_binary;
   CostBlock          cost_block;
@@ -156,10 +198,14 @@ void time_methods() {
 
   for (int i = 0; i < desc_count; i++) {
     const fnc_desc& desc = descs[i];
+    string outfile = dat_file(desc.type, "64");
     time_primorial_growth(s64_qform_costs,
-			  desc.type, "64", desc.cost_exp);
+			  desc.type, 64,
+			  outfile, desc.cost_exp);
+    outfile = dat_file(desc.type, "128");
     time_primorial_growth(s128_qform_costs,
-			  desc.type, "128", desc.cost_exp);
+			  desc.type, 128,
+			  outfile, desc.cost_exp);
   }
 }
 
@@ -262,7 +308,8 @@ int main(int argc, char** argv) {
   struct rlimit l = {1024ULL*1024ULL*1024ULL, 1024ULL*1024ULL*1024ULL};
   setrlimit(RLIMIT_AS, &l);
 
-  time_methods();
+  //  time_methods();
+  time_defence();
   //  time_16bit_methods();
 
   /*
