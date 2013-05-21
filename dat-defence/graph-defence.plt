@@ -1,4 +1,5 @@
 set terminal eps enhanced
+set key left
 
 set xlabel 'The value of t for the exponent E_t'
 set ylabel 'Estimated Time (Milliseconds)'
