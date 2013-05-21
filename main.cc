@@ -41,6 +41,7 @@
 extern "C" {
 #include "liboptarith/closest_23.h"
 #include "liboptarith/group.h"
+#include "liboptarith/group_pow.h"
 #include "liboptarith/math32.h"
 #include "liboptarith/primes.h"
 #include "liboptarith/primorial.h"
@@ -77,6 +78,93 @@ string dat16bit_file(const string& type, const string& ext) {
 string datbound_file(const string& type, const string& ext) {
   return "dat-bound/" + type + "-" + ext + ".dat";
 }
+
+void time_real_primorial_growth(const string& out_file) {
+  const int bits = 48;
+  const int group_count = 1000;
+  const int class_count = 100;
+  assert(bits <= s64_qform_group_max_bits);
+  cout << setprecision(5) << fixed;
+  mpz_c primorial(1);
+  remove(out_file.c_str());
+
+  s64_qform_group_t qgroup;
+  s64_qform_group_init(&qgroup);
+  s64_qform_t A;
+  s64_qform_t R;
+  s64_qform_init(&qgroup, &A);
+  s64_qform_init(&qgroup, &R);
+  group_pow_t pow;
+  group_pow_init(&pow, &qgroup.desc.group);
+  mpz_t D;
+  mpz_init(D);
+  gmp_randstate_t rands;
+  gmp_randinit_default(rands);
+
+  for (int prime_index = 0;
+       prime_index < prime_count;
+       prime_index += prime_step) {
+    // Compute the power primorial
+    mpz_power_primorial(primorial.z, prime_index + 1,
+			prime_list[prime_index] * prime_list[prime_index]);
+
+    cout << "Using P_" << prime_index
+         << " on a " << bits << "-bit discriminant." << endl;
+    int primorial_size = mpz_sizeinbase(primorial.z, 2);
+    cout << "Power primorial has " << primorial_size << " bits." << endl;
+
+    // Generate 2,3 representation.
+    cout << "Generating 2,3 represenation." << endl;
+    int term_count;
+    factored_two_three_term16_t* terms =
+        factored_rep_prune_closest(&term_count, primorial.z,
+				   &s64_qform_all_costs[bits-16], 16);
+
+
+    // Estimate cost.
+    int max_a = 0;
+    int max_b = 0;
+    for (int i = 0; i < term_count; i ++) {
+      //      if (terms[i].a > max_a) max_a = terms[i].a;
+      max_a += terms[i].a;
+      int b = terms[i].b & 0x7f;
+      if (b > max_b) max_b = b;
+    }
+    double est = s64_qform_all_costs[bits-16].compose * (term_count - 1) +
+                 s64_qform_all_costs[bits-16].square * max_a +
+                 s64_qform_all_costs[bits-16].cube * max_b;
+    cout << "Estimated time is: " << (est / 1000) << endl;
+
+    // Time exponentiation.
+    cout << "Timing exponentiation." << endl;
+    double cost = 0;
+    uint64_t start = current_nanos();
+    for (int g = 0; g < group_count; g++) {
+      mpz_random_semiprime_discriminant(D, rands, bits);
+      s64_qform_group_set_discriminant(&qgroup, D);
+      for (int c = 0; c < class_count; c++) {
+	qform_random_primeform(&qgroup.desc, &A);
+	group_pow_factored23(&pow, &R, &A, terms, term_count);
+      }
+    }
+    cost = current_nanos() - start;
+    cost /= group_count * class_count;
+
+    // Release the 2,3 representation.
+    free(terms);
+
+    cout << "Actual L2R Best Approximations:" << cost << endl;
+    append_gnuplot_datfile(out_file, prime_index + 1, cost / 1000000);
+    cout << endl;
+  }
+
+  mpz_clear(D);
+  group_pow_clear(&pow);
+  s64_qform_clear(&qgroup, &A);
+  s64_qform_clear(&qgroup, &R);
+  s64_qform_group_clear(&qgroup);
+}
+
 
 void time_primorial_growth(const group_cost_t& costs,
 			   const string& type,
@@ -308,8 +396,11 @@ int main(int argc, char** argv) {
   struct rlimit l = {1024ULL*1024ULL*1024ULL, 1024ULL*1024ULL*1024ULL};
   setrlimit(RLIMIT_AS, &l);
 
-  //  time_methods();
-  time_defence();
+  //  time_defence();
+  //  time_real_primorial_growth("real-times-48.dat");
+
+
+  time_methods();
   //  time_16bit_methods();
 
   /*
