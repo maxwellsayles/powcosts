@@ -6,7 +6,7 @@ set ylabel 'Estimated Time (Milliseconds)
 
 set xrange [0:1000]
 
-set output 'pow-winners-64.eps'
+set output 'pow-winners-59.eps'
 set yrange [0:8]
 plot 'binary-64.dat' with lines t 'Binary', \
      'naf_r2l-64.dat' with lines t 'Non-Adjacent Form', \
@@ -14,7 +14,7 @@ plot 'binary-64.dat' with lines t 'Binary', \
      'dbns_l2r-64.dat' with lines t 'Greedy L2R', \
      'dbns_l2r_tree-64.dat' with lines t 'Our L2R Best Approximations'
 
-set output 'pow-winners-128.eps'
+set output 'pow-winners-118.eps'
 set yrange [0:20]
 plot 'binary-128.dat' with lines t 'Binary', \
      'naf_r2l-128.dat' with lines t 'Non-Adjacent Form', \
